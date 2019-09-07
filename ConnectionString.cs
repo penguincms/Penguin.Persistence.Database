@@ -12,8 +12,6 @@ namespace Penguin.Persistence.Database
     /// </summary>
     public class ConnectionString
     {
-        #region Properties
-
         /// <summary>
         /// The database name for the connection string
         /// </summary>
@@ -34,17 +32,11 @@ namespace Penguin.Persistence.Database
         /// </summary>
         public string UserName => this.GetAliasedValue(usernameAliases);
 
-        #endregion Properties
-
-        #region Classes
-
         /// <summary>
         /// A class representing the result of an attempt to validate a connection string
         /// </summary>
         public class TestResult
         {
-            #region Properties
-
             /// <summary>
             /// Any error occured while attempting to validate
             /// </summary>
@@ -55,10 +47,6 @@ namespace Penguin.Persistence.Database
             /// </summary>
             public bool Success => this.Error == null;
 
-            #endregion Properties
-
-            #region Constructors
-
             internal TestResult()
             {
             }
@@ -67,13 +55,7 @@ namespace Penguin.Persistence.Database
             {
                 this.Error = ex;
             }
-
-            #endregion Constructors
         }
-
-        #endregion Classes
-
-        #region Constructors
 
         /// <summary>
         /// Creates a new instance of this object using the provided connection string
@@ -89,10 +71,6 @@ namespace Penguin.Persistence.Database
                                                       kvp => kvp[1].Trim(),
                                                       StringComparer.InvariantCultureIgnoreCase);
         }
-
-        #endregion Constructors
-
-        #region Methods
 
         /// <summary>
         /// Attempts to use regex to retrieve connection strings from a file
@@ -150,16 +128,10 @@ namespace Penguin.Persistence.Database
         /// <returns></returns>
         public TestResult Test() => Test(this.connectionString);
 
-        #endregion Methods
-
-        #region Fields
-
         private static readonly string[] databaseAliases = { "database", "initial catalog" };
         private static readonly string[] passwordAliases = { "password", "pwd" };
         private static readonly string[] serverAliases = { "server", "host", "data source", "datasource", "address", "addr", "network address" };
         private static readonly string[] usernameAliases = { "user id", "uid", "username", "user name", "user" };
-
-        #endregion Fields
 
         private string connectionString { get; set; }
 

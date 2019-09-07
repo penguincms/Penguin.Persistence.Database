@@ -14,8 +14,6 @@ namespace Penguin.Persistence.Database.Objects
     /// </summary>
     public class DatabaseInstance
     {
-        #region Properties
-
         /// <summary>
         /// A global command timeout in seconds
         /// </summary>
@@ -25,10 +23,6 @@ namespace Penguin.Persistence.Database.Objects
         /// The connection string used when constructing this object
         /// </summary>
         public string ConnectionString { get; internal set; }
-
-        #endregion Properties
-
-        #region Constructors
 
         /// <summary>
         /// Creates a new DatabaseInstance using the provided connection string
@@ -40,10 +34,6 @@ namespace Penguin.Persistence.Database.Objects
             this.ConnectionString = connectionString;
             this.CommandTimeout = commandTimeout;
         }
-
-        #endregion Constructors
-
-        #region Methods
 
         /// <summary>
         /// Returns an SQL type representing the requested .Net Type
@@ -433,7 +423,5 @@ namespace Penguin.Persistence.Database.Objects
 
             return $"{toReturn}{postFix}";
         }
-
-        #endregion Methods
     }
 }

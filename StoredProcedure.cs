@@ -13,8 +13,6 @@ namespace Penguin.Persistence.Database
     /// </summary>
     public class StoredProcedure
     {
-        #region Properties
-
         /// <summary>
         /// The body of the script
         /// </summary>
@@ -34,10 +32,6 @@ namespace Penguin.Persistence.Database
         /// Definitions for the parameters of this stored procedure
         /// </summary>
         public SqlParameter[] Parameters { get; set; }
-
-        #endregion Properties
-
-        #region Constructors
 
         /// <summary>
         /// Constructs an empty instance of this class
@@ -118,10 +112,6 @@ namespace Penguin.Persistence.Database
             }
         }
 
-        #endregion Constructors
-
-        #region Methods
-
         /// <summary>
         /// Alters the name of the procedure, both property and body of the script
         /// </summary>
@@ -137,13 +127,7 @@ namespace Penguin.Persistence.Database
             this.Name = parsedNewName;
         }
 
-        #endregion Methods
-
-        #region Fields
-
         private const string LAST_PARAMETER_DELIMETER = @"([\s\r\n]+|^)as[\s\r\n]+(begin|set)[\s\r\n]+";
-
-        #endregion Fields
 
         private string RemoveComments(string intext)
         {

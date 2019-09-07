@@ -10,7 +10,6 @@ namespace Penguin.Persistence.Database
     {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
-        #region Properties
         public string AS_LOCATOR { get; set; }
         public int? CHARACTER_MAXIMUM_LENGTH { get; set; }
         public int? CHARACTER_OCTET_LENGTH { get; set; }
@@ -42,10 +41,6 @@ namespace Penguin.Persistence.Database
         public string USER_DEFINED_TYPE_CATALOG { get; set; }
         public string USER_DEFINED_TYPE_NAME { get; set; }
         public string USER_DEFINED_TYPE_SCHEMA { get; set; }
-
-        #endregion Properties
-
-        #region Constructors
 
         public SQLParameterInfo(DataRow dr)
         {
@@ -79,8 +74,6 @@ namespace Penguin.Persistence.Database
             SCOPE_SCHEMA = dr.Value<string>(ParameterTableColumns.SCOPE_SCHEMA);
             SCOPE_NAME = dr.Value<string>(ParameterTableColumns.SCOPE_NAME);
         }
-
-        #endregion Constructors
 
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }

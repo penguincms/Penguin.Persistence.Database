@@ -14,8 +14,6 @@ namespace Penguin.Persistence.Database.Extensions
     public static class DataTableExtensions
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
-        #region Methods
-
         /// <summary>
         /// Returns a typed list representing all values in a given column of the data table
         /// </summary>
@@ -160,7 +158,5 @@ namespace Penguin.Persistence.Database.Extensions
 
             return dr[ColumnName].ToString().Convert<T>(IgnoreCase);
         }
-
-        #endregion Methods
     }
 }

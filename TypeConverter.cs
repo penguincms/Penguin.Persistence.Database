@@ -9,8 +9,6 @@ namespace Penguin.Persistence.Database
     /// </summary>
     public sealed class TypeConverter
     {
-        #region Constructors
-
         static TypeConverter()
         {
             DbTypeMapEntry dbTypeMapEntry
@@ -61,10 +59,6 @@ namespace Penguin.Persistence.Database
             = new DbTypeMapEntry(typeof(string), DbType.String, SqlDbType.VarChar);
             _DbTypeList.Add(dbTypeMapEntry);
         }
-
-        #endregion Constructors
-
-        #region Methods
 
         /// <summary>
         /// Convert .Net type to Db type
@@ -132,27 +126,13 @@ namespace Penguin.Persistence.Database
             return entry.SqlDbType;
         }
 
-        #endregion Methods
-
-        #region Fields
-
         private static ArrayList _DbTypeList = new ArrayList();
-
-        #endregion Fields
-
-        #region Structs
 
         private struct DbTypeMapEntry
         {
-            #region Fields
-
             public DbType DbType;
             public SqlDbType SqlDbType;
             public Type Type;
-
-            #endregion Fields
-
-            #region Constructors
 
             public DbTypeMapEntry(Type type, DbType dbType, SqlDbType sqlDbType)
             {
@@ -160,11 +140,7 @@ namespace Penguin.Persistence.Database
                 this.DbType = dbType;
                 this.SqlDbType = sqlDbType;
             }
-
-            #endregion Constructors
         };
-
-        #endregion Structs
 
         private TypeConverter()
         {
