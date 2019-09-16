@@ -1,8 +1,10 @@
-﻿using Penguin.Extensions.String;
+﻿using Penguin.Extensions.Strings;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -21,7 +23,7 @@ namespace Penguin.Persistence.Database
         /// <summary>
         /// Any additional connection strings that were found in the script using the format --@using CONNECTION_STRING
         /// </summary>
-        public List<string> ConnectionStrings { get; set; }
+        public List<string> ConnectionStrings { get; }
 
         /// <summary>
         /// The name of the stored procedure as found in the source script
@@ -31,7 +33,7 @@ namespace Penguin.Persistence.Database
         /// <summary>
         /// Definitions for the parameters of this stored procedure
         /// </summary>
-        public SqlParameter[] Parameters { get; set; }
+        public IEnumerable<SqlParameter> Parameters { get; set; }
 
         /// <summary>
         /// Constructs an empty instance of this class
@@ -46,15 +48,17 @@ namespace Penguin.Persistence.Database
         /// <param name="Script">The creation script for the stored procedure</param>
         public StoredProcedure(string Script)
         {
+            Contract.Requires(!string.IsNullOrWhiteSpace(Script));
+
             ConnectionStrings = new List<string>();
 
             this.Body = this.RemoveComments(Script).From("create procedure ", true, StringComparison.CurrentCultureIgnoreCase).ToLast("\nGO", false, StringComparison.CurrentCultureIgnoreCase).Trim();
 
-            List<string> Commands = Script.Split('\n').Where(s => s.Trim().StartsWith("--@")).Select(s => s.From("@")).ToList();
+            List<string> Commands = Script.Split('\n').Where(s => s.Trim().StartsWith("--@", StringComparison.OrdinalIgnoreCase)).Select(s => s.From("@")).ToList();
 
             foreach (string Command in Commands)
             {
-                if (Command.To(" ").ToLower() == "using")
+                if (Command.To(" ").ToLower(CultureInfo.CurrentCulture) == "using")
                 {
                     this.ConnectionStrings.Add(Command.Trim().From(" ").Trim());
                 }
@@ -82,7 +86,7 @@ namespace Penguin.Persistence.Database
                 {
                     LastParameter = true;
 
-                    WorkingParameter = WorkingParameter.ToLower().Substring(0, match.Index);
+                    WorkingParameter = WorkingParameter.ToLower(CultureInfo.CurrentCulture).Substring(0, match.Index);
 
                     if (string.IsNullOrWhiteSpace(WorkingParameter))
                     { break; }
@@ -118,6 +122,8 @@ namespace Penguin.Persistence.Database
         /// <param name="newName">The new name to give the procedure</param>
         public void RenameProcedure(string newName)
         {
+            Contract.Requires(!string.IsNullOrWhiteSpace(newName));
+
             string parsedNewName = "[" + newName.Trim('[').Trim(']') + "]";
 
             int NameIndex = Body.AllIndexesOf(this.Name).First(i => i > Body.IndexOf("create procedure ", StringComparison.OrdinalIgnoreCase));

@@ -10,6 +10,7 @@ namespace Penguin.Persistence.Database
     {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
+#pragma warning disable CA1707 // Identifiers should not contain underscores
         public string AS_LOCATOR { get; set; }
         public int? CHARACTER_MAXIMUM_LENGTH { get; set; }
         public int? CHARACTER_OCTET_LENGTH { get; set; }
@@ -41,6 +42,7 @@ namespace Penguin.Persistence.Database
         public string USER_DEFINED_TYPE_CATALOG { get; set; }
         public string USER_DEFINED_TYPE_NAME { get; set; }
         public string USER_DEFINED_TYPE_SCHEMA { get; set; }
+#pragma warning restore CA1707 // Identifiers should not contain underscores
 
         public SQLParameterInfo(DataRow dr)
         {

@@ -9,6 +9,21 @@
             A class to convert a connection string into a solid object
             </summary>
         </member>
+        <member name="T:Penguin.Persistence.Database.ConnectionString.TestResult">
+            <summary>
+            A class representing the result of an attempt to validate a connection string
+            </summary>
+        </member>
+        <member name="P:Penguin.Persistence.Database.ConnectionString.TestResult.Error">
+            <summary>
+            Any error occured while attempting to validate
+            </summary>
+        </member>
+        <member name="P:Penguin.Persistence.Database.ConnectionString.TestResult.Success">
+            <summary>
+            Whether or not the connection attempt was successfull
+            </summary>
+        </member>
         <member name="P:Penguin.Persistence.Database.ConnectionString.Database">
             <summary>
             The database name for the connection string
@@ -29,26 +44,11 @@
             The user name used to access this data source
             </summary>
         </member>
-        <member name="T:Penguin.Persistence.Database.ConnectionString.TestResult">
-            <summary>
-            A class representing the result of an attempt to validate a connection string
-            </summary>
-        </member>
-        <member name="P:Penguin.Persistence.Database.ConnectionString.TestResult.Error">
-            <summary>
-            Any error occured while attempting to validate
-            </summary>
-        </member>
-        <member name="P:Penguin.Persistence.Database.ConnectionString.TestResult.Success">
-            <summary>
-            Whether or not the connection attempt was successfull
-            </summary>
-        </member>
         <member name="M:Penguin.Persistence.Database.ConnectionString.#ctor(System.String)">
             <summary>
             Creates a new instance of this object using the provided connection string
             </summary>
-            <param name="_connectionString">The connection string to be parsed</param>
+            <param name="connectionStringToTest">The connection string to be parsed</param>
         </member>
         <member name="M:Penguin.Persistence.Database.ConnectionString.FromFile(System.String)">
             <summary>
@@ -61,7 +61,7 @@
             <summary>
             Tests a connection string using SqlConnection and returns a test result representing the status
             </summary>
-            <param name="_connectionString">The connection string to test</param>
+            <param name="connectionStringToTest">The connection string to test</param>
             <returns>The rest result</returns>
         </member>
         <member name="M:Penguin.Persistence.Database.ConnectionString.Test">
@@ -231,7 +231,7 @@
             <param name="ColumnName">The name of the column to convert to a typed list</param>
             <returns>A typed list representing all values in a given column of the data table</returns>
         </member>
-        <member name="M:Penguin.Persistence.Database.Extensions.DataTableExtensions.Single``1(System.Data.DataTable,System.Boolean)">
+        <member name="M:Penguin.Persistence.Database.Extensions.DataTableExtensions.GetSingle``1(System.Data.DataTable,System.Boolean)">
             <summary>
             Returns casted value from a [1][1] length datatable
             </summary>

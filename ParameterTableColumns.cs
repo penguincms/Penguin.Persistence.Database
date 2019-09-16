@@ -6,6 +6,7 @@
     public static class ParameterTableColumns
     {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CA1707 // Identifiers should not contain underscores
         public const string AS_LOCATOR = "AS_LOCATOR";
         public const string CHARACTER_MAXIMUM_LENGTH = "CHARACTER_MAXIMUM_LENGTH";
         public const string CHARACTER_OCTET_LENGTH = "CHARACTER_OCTET_LENGTH";
@@ -35,6 +36,7 @@
         public const string USER_DEFINED_TYPE_CATALOG = "USER_DEFINED_TYPE_CATALOG";
         public const string USER_DEFINED_TYPE_NAME = "USER_DEFINED_TYPE_NAME";
         public const string USER_DEFINED_TYPE_SCHEMA = "USER_DEFINED_TYPE_SCHEMA";
+#pragma warning restore CA1707 // Identifiers should not contain underscores
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 }

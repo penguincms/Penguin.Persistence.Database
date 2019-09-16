@@ -126,8 +126,6 @@ namespace Penguin.Persistence.Database
             return entry.SqlDbType;
         }
 
-        private static ArrayList _DbTypeList = new ArrayList();
-
         private struct DbTypeMapEntry
         {
             public DbType DbType;
@@ -141,6 +139,11 @@ namespace Penguin.Persistence.Database
                 this.SqlDbType = sqlDbType;
             }
         };
+
+        private const string UnsupportedTypeMessage = "Referenced an unsupported Type";
+        private const string UnsupportedSQLTypeMessage = "Referenced an unsupported SqlDbType";
+        private const string UnsupportedDbTypeMessage = "Referenced an unsupported DbType";
+        private static readonly ArrayList _DbTypeList = new ArrayList();
 
         private TypeConverter()
         {
@@ -161,7 +164,7 @@ namespace Penguin.Persistence.Database
             if (retObj == null)
             {
                 throw
-                new ApplicationException("Referenced an unsupported Type");
+                new ApplicationException(UnsupportedTypeMessage);
             }
 
             return (DbTypeMapEntry)retObj;
@@ -182,7 +185,7 @@ namespace Penguin.Persistence.Database
             if (retObj == null)
             {
                 throw
-                new ApplicationException("Referenced an unsupported DbType");
+                new ApplicationException(UnsupportedDbTypeMessage);
             }
 
             return (DbTypeMapEntry)retObj;
@@ -203,7 +206,7 @@ namespace Penguin.Persistence.Database
             if (retObj == null)
             {
                 throw
-                new ApplicationException("Referenced an unsupported SqlDbType");
+                new ApplicationException(UnsupportedSQLTypeMessage);
             }
 
             return (DbTypeMapEntry)retObj;

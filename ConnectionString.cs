@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -12,26 +13,6 @@ namespace Penguin.Persistence.Database
     /// </summary>
     public class ConnectionString
     {
-        /// <summary>
-        /// The database name for the connection string
-        /// </summary>
-        public string Database => this.GetAliasedValue(databaseAliases);
-
-        /// <summary>
-        /// The data source (or server) name for the connection string
-        /// </summary>
-        public string DataSource => this.GetAliasedValue(serverAliases);
-
-        /// <summary>
-        /// The password used to access this data source
-        /// </summary>
-        public string Password => this.GetAliasedValue(passwordAliases);
-
-        /// <summary>
-        /// The user name used to access this data source
-        /// </summary>
-        public string UserName => this.GetAliasedValue(usernameAliases);
-
         /// <summary>
         /// A class representing the result of an attempt to validate a connection string
         /// </summary>
@@ -58,13 +39,35 @@ namespace Penguin.Persistence.Database
         }
 
         /// <summary>
+        /// The database name for the connection string
+        /// </summary>
+        public string Database => this.GetAliasedValue(databaseAliases);
+
+        /// <summary>
+        /// The data source (or server) name for the connection string
+        /// </summary>
+        public string DataSource => this.GetAliasedValue(serverAliases);
+
+        /// <summary>
+        /// The password used to access this data source
+        /// </summary>
+        public string Password => this.GetAliasedValue(passwordAliases);
+
+        /// <summary>
+        /// The user name used to access this data source
+        /// </summary>
+        public string UserName => this.GetAliasedValue(usernameAliases);
+
+        /// <summary>
         /// Creates a new instance of this object using the provided connection string
         /// </summary>
-        /// <param name="_connectionString">The connection string to be parsed</param>
-        public ConnectionString(string _connectionString)
+        /// <param name="connectionStringToTest">The connection string to be parsed</param>
+        public ConnectionString(string connectionStringToTest)
         {
-            this.connectionString = _connectionString;
-            this.ConnectionStringDictionary = _connectionString.Split(';')
+            Contract.Requires(!string.IsNullOrWhiteSpace(connectionStringToTest));
+
+            this.connectionString = connectionStringToTest;
+            this.ConnectionStringDictionary = connectionStringToTest.Split(';')
                                          .Where(kvp => kvp.Contains('='))
                                          .Select(kvp => kvp.Split(new char[] { '=' }, 2))
                                          .ToDictionary(kvp => kvp[0].Trim(),
@@ -102,13 +105,13 @@ namespace Penguin.Persistence.Database
         /// <summary>
         /// Tests a connection string using SqlConnection and returns a test result representing the status
         /// </summary>
-        /// <param name="_connectionString">The connection string to test</param>
+        /// <param name="connectionStringToTest">The connection string to test</param>
         /// <returns>The rest result</returns>
-        public static TestResult Test(string _connectionString)
+        public static TestResult Test(string connectionStringToTest)
         {
             try
             {
-                using (SqlConnection con = new SqlConnection(_connectionString))
+                using (SqlConnection con = new SqlConnection(connectionStringToTest))
                 {
                     con.Open();
                     con.Close();
@@ -128,14 +131,12 @@ namespace Penguin.Persistence.Database
         /// <returns></returns>
         public TestResult Test() => Test(this.connectionString);
 
+        private string connectionString { get; set; }
+        private Dictionary<string, string> ConnectionStringDictionary { get; set; }
         private static readonly string[] databaseAliases = { "database", "initial catalog" };
         private static readonly string[] passwordAliases = { "password", "pwd" };
         private static readonly string[] serverAliases = { "server", "host", "data source", "datasource", "address", "addr", "network address" };
         private static readonly string[] usernameAliases = { "user id", "uid", "username", "user name", "user" };
-
-        private string connectionString { get; set; }
-
-        private Dictionary<string, string> ConnectionStringDictionary { get; set; }
 
         private string GetAliasedValue(string[] aliases)
         {
