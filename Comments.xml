@@ -107,6 +107,13 @@
             <param name="connectionString">The connection string to use</param>
             <param name="commandTimeout">The global command timeout</param>
         </member>
+        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.Backup(System.String,System.String)">
+            <summary>
+            Backs up an entire database schema to a file, including data
+            </summary>
+            <param name="ConnectionString">The database connection string</param>
+            <param name="FileName">The file to output the data to</param>
+        </member>
         <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.FormatProcedure(System.String)">
             <summary>
             Ensures that procedure names always contain once set of braces so SQL parses them correctly
