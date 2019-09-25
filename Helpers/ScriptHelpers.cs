@@ -16,7 +16,7 @@ namespace Penguin.Persistence.Database.Helpers
     {
         public const string DEFAULT_SPLIT = "\r\nGO\r\n";
 
-        public static async Task RunSplitScript(string FilePath, string ConnectionString, string SplitOn = DEFAULT_SPLIT)
+        public static async Task RunSplitScript(string FilePath, string ConnectionString, int TimeOut = 0, string SplitOn = DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = -1)
         {
             DateTime start = DateTime.Now;
 
@@ -34,10 +34,10 @@ namespace Penguin.Persistence.Database.Helpers
                     {
                         Connection = connection,
                         CommandType = CommandType.Text,
-                        CommandTimeout = 600000
+                        CommandTimeout = TimeOut
                     };
 
-                    while (!ReadComplete)
+                    while (!ReadComplete || Commands.Any())
                     {
                         if (Commands.Any())
                         {
@@ -80,90 +80,115 @@ namespace Penguin.Persistence.Database.Helpers
 
             BackgroundWorker FileReadWorker = BackgroundWorker.Create((worker) =>
             {
-                using (StreamReader reader = File.OpenText(FilePath))
+                using (FileStream stream = File.OpenRead(FilePath))
                 {
-                    // Open the connection and execute the reader.
-
-                    int BufferLength = SplitOn.Length;
-
-                    char[] buffer = new char[BufferLength];
-                    char[] splitArray = SplitOn.ToCharArray();
-
-                    int bufferPointer = 0;
-
-                    StringBuilder currentCommand = new StringBuilder(5000);
-
-                    int commandNumber = 0;
-                    bool wrapped = false;
-
-                    while (!reader.EndOfStream)
+                    using (StreamReader reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks, bufferSize, false)) 
                     {
-                        char currentChar = (char)reader.Read();
+                        // Open the connection and execute the reader.
 
-                        buffer[bufferPointer] = currentChar;
+                        int BufferLength = SplitOn.Length;
 
-                        bool breakScript = true;
+                        char[] buffer = new char[BufferLength];
+                        char[] splitArray = SplitOn.ToCharArray();
 
-                        for (int i = 0; i < BufferLength; i++)
+                        int bufferPointer = 0;
+
+                        StringBuilder currentCommand = new StringBuilder(5000);
+
+                        int commandNumber = 0;
+                        bool wrapped = false;
+
+                        while (!reader.EndOfStream)
                         {
-                            if (buffer[(bufferPointer - ((buffer.Length - 1) - i) % buffer.Length + buffer.Length) % buffer.Length] != SplitOn[i])
+                            char currentChar = (char)reader.Read();
+
+                            buffer[bufferPointer] = currentChar;
+
+                            bool breakScript = true;
+
+                            for (int i = 0; i < BufferLength; i++)
                             {
-                                breakScript = false;
+                                if (buffer[(bufferPointer - ((buffer.Length - 1) - i) % buffer.Length + buffer.Length) % buffer.Length] != SplitOn[i])
+                                {
+                                    breakScript = false;
+                                    break;
+                                }
+                            }
+
+                            bufferPointer++;
+
+                            if (bufferPointer == buffer.Length)
+                            {
+                                wrapped = true;
+                                bufferPointer = 0;
+                            }
+
+                            if (breakScript)
+                            {
+                                AsyncSqlCommand icmd = new AsyncSqlCommand(currentCommand.ToString(), ((reader.BaseStream.Position / (decimal)reader.BaseStream.Length) * 100), ++commandNumber);
+
+                                while (Commands.Count > 5)
+                                {
+                                    if (SQLWorker.IsBusy)
+                                    {
+                                        System.Threading.Thread.Sleep(100);
+                                    }
+                                    else
+                                    {
+                                        throw new Exception("Sql worker ended unexpectedly");
+                                    }
+                                }
+
+                                Commands.Enqueue(icmd);
+
+                                currentCommand.Clear();
+
+                                buffer = new char[BufferLength];
+                                bufferPointer = 0;
+                                wrapped = false;
+                            }
+                            else
+                            {
+                                if (wrapped)
+                                {
+                                    currentCommand.Append(buffer[bufferPointer]);
+                                }
+                            }
+                        }
+
+                        int finalPointer = bufferPointer;
+                        bool breakBuffer;
+                        //Grab any straying characters from the buffer;
+
+                        do
+                        {
+
+                            bufferPointer++;
+
+
+                            if (bufferPointer == buffer.Length)
+                            {
+                                wrapped = true;
+                                bufferPointer = 0;
+                            }
+
+                            breakBuffer = bufferPointer == finalPointer;
+
+                            if (breakBuffer)
+                            {
                                 break;
                             }
-                        }
 
-                        bufferPointer++;
+                            currentCommand.Append(buffer[bufferPointer]);
 
-                        if (bufferPointer == buffer.Length)
-                        {
-                            wrapped = true;
-                            bufferPointer = 0;
-                        }
+                        } while (true);
 
-                        if (breakScript)
-                        {
-                            AsyncSqlCommand icmd = new AsyncSqlCommand(currentCommand.ToString(), ((reader.BaseStream.Position / (decimal)reader.BaseStream.Length) * 100), ++commandNumber);
+                        AsyncSqlCommand lcmd = new AsyncSqlCommand(currentCommand.ToString(), ((reader.BaseStream.Position / (decimal)reader.BaseStream.Length) * 100), commandNumber);
 
-                            while (Commands.Count > 5)
-                            {
-                                if (SQLWorker.IsBusy)
-                                {
-                                    System.Threading.Thread.Sleep(100);
-                                }
-                                else
-                                {
-                                    throw new Exception("Sql worker ended unexpectedly");
-                                }
-                            }
+                        Commands.Enqueue(lcmd);
 
-                            Commands.Enqueue(icmd);
-
-                            currentCommand.Clear();
-
-                            buffer = new char[BufferLength];
-                            bufferPointer = 0;
-                            wrapped = false;
-                        }
-                        else
-                        {
-                            if (wrapped)
-                            {
-                                currentCommand.Append(buffer[bufferPointer]);
-                            }
-                        }
+                        ReadComplete = true;
                     }
-
-                    AsyncSqlCommand lcmd = new AsyncSqlCommand(currentCommand.ToString(), ((reader.BaseStream.Position / (decimal)reader.BaseStream.Length) * 100), commandNumber);
-
-                    Commands.Enqueue(lcmd);
-
-                    ReadComplete = true;
-
-                    while (SQLWorker.IsBusy)
-                    {
-                        System.Threading.Thread.Sleep(100);
-                    };
                 }
             });
 

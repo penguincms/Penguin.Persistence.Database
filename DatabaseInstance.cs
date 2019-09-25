@@ -205,9 +205,12 @@ namespace Penguin.Persistence.Database.Objects
         /// </summary>
         /// <param name="FileName">The file name to run</param>
         /// <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
-        public async Task ExecuteScript(string FileName, string SplitOn = ScriptHelpers.DEFAULT_SPLIT)
+        /// <param name="encoding">The encoding to read the file with</param>
+        /// <param name="detectEncodingFromByteOrderMarks">Try to automatically detect the file encoding</param>
+        /// <param name="bufferSize">The buffer size for the stream reader</param>
+        public async Task ExecuteScript(string FileName, string SplitOn = ScriptHelpers.DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = -1)
         {
-            await ScriptHelpers.RunSplitScript(FileName, ConnectionString, SplitOn);
+            await ScriptHelpers.RunSplitScript(FileName, ConnectionString, CommandTimeout, SplitOn, encoding, detectEncodingFromByteOrderMarks, bufferSize);
         }
 
         /// <summary>
@@ -505,7 +508,7 @@ namespace Penguin.Persistence.Database.Objects
         public async Task Restore(string FileName, string SplitOn = ScriptHelpers.DEFAULT_SPLIT)
         {
             TruncateDatabase();
-            await ScriptHelpers.RunSplitScript(FileName, ConnectionString, SplitOn);
+            await ScriptHelpers.RunSplitScript(FileName, ConnectionString, CommandTimeout, SplitOn);
         }
 
         /// <summary>

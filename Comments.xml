@@ -147,12 +147,15 @@
             <param name="args">The ordered values of any "@i" formatted parameters to replace in the query</param>
             <returns>The number of rows affected</returns>
         </member>
-        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteScript(System.String,System.String)">
+        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteScript(System.String,System.String,System.Text.Encoding,System.Boolean,System.Int32)">
             <summary>
             Runs the SQL file at the provided path against the current database
             </summary>
             <param name="FileName">The file name to run</param>
             <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
+            <param name="encoding">The encoding to read the file with</param>
+            <param name="detectEncodingFromByteOrderMarks">Try to automatically detect the file encoding</param>
+            <param name="bufferSize">The buffer size for the stream reader</param>
         </member>
         <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteStoredProcedure(System.String)">
             <summary>
