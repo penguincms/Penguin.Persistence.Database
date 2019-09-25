@@ -1,4 +1,8 @@
-﻿using Penguin.Persistence.Database.Extensions;
+﻿using Microsoft.SqlServer.Management.Common;
+using Microsoft.SqlServer.Management.Smo;
+using Penguin.Debugging;
+using Penguin.Persistence.Database.Extensions;
+using Penguin.Persistence.Database.Helpers;
 using Penguin.Reflection.Extensions;
 using System;
 using System.Collections.Generic;
@@ -8,6 +12,7 @@ using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Penguin.Persistence.Database.Objects
 {
@@ -16,8 +21,6 @@ namespace Penguin.Persistence.Database.Objects
     /// </summary>
     public class DatabaseInstance
     {
-        private const string MultipleRowsMessage = "Multiple rows returned for Query";
-
         /// <summary>
         /// A global command timeout in seconds
         /// </summary>
@@ -28,6 +31,8 @@ namespace Penguin.Persistence.Database.Objects
         /// </summary>
         public string ConnectionString { get; internal set; }
 
+        private const string MultipleRowsMessage = "Multiple rows returned for Query";
+
         /// <summary>
         /// Creates a new DatabaseInstance using the provided connection string
         /// </summary>
@@ -37,6 +42,88 @@ namespace Penguin.Persistence.Database.Objects
         {
             this.ConnectionString = connectionString;
             this.CommandTimeout = commandTimeout;
+        }
+
+        /// <summary>
+        /// Backs up an entire database schema to a file, including data
+        /// </summary>
+        /// <param name="ConnectionString">The database connection string</param>
+        /// <param name="FileName">The file to output the data to</param>
+        public static void Backup(string ConnectionString, string FileName)
+        {
+            ConnectionString connection = new ConnectionString(ConnectionString);
+
+            ServerConnection serverConnection = new ServerConnection
+            {
+                LoginSecure = false,
+                ServerInstance = connection.DataSource
+            };
+
+            if (string.IsNullOrWhiteSpace(connection.UserName))
+            {
+                serverConnection.Authentication = SqlConnectionInfo.AuthenticationMethod.ActiveDirectoryIntegrated;
+                serverConnection.TrustServerCertificate = true;
+            }
+            else
+            {
+                serverConnection.Login = connection.UserName;
+                serverConnection.Password = connection.Password;
+            }
+
+            serverConnection.DatabaseName = connection.Database;
+
+            Server smoServer = new Server(serverConnection);
+
+            if (smoServer.Version is null)
+            {
+                throw new Exception("Can't find the instance $Datasource");
+            }
+
+            Microsoft.SqlServer.Management.Smo.Database db = smoServer.Databases[serverConnection.DatabaseName];
+
+            if (db is null)
+            {
+                throw new Exception("Can't find the database '$Database' in $Datasource");
+            }
+
+            Transfer transfer = new Transfer(db);
+
+            transfer.Options.BatchSize = 100;
+
+            transfer.Options.ScriptBatchTerminator = true;
+            transfer.Options.ToFileOnly = true;
+            transfer.Options.FileName = FileName;
+            transfer.Options.ScriptData = true;
+            transfer.Options.DriAll = true;
+            transfer.Options.ClusteredIndexes = true;
+            transfer.Options.FullTextCatalogs = true;
+            transfer.Options.FullTextIndexes = true;
+            transfer.Options.FullTextStopLists = true;
+            transfer.Options.Indexes = true;
+            transfer.Options.Triggers = true;
+
+            transfer.DataTransferEvent += (sender, e) =>
+            {
+                try
+                {
+                    Console.WriteLine($"{e.DataTransferEventType}: {e.Message}");
+                }
+                catch (Exception) { }
+            };
+
+            Console.WriteLine($"Starting backup of {connection.DataSource}\\{connection.Database}...");
+            transfer.EnumScriptTransfer();
+            Console.WriteLine($"Backup completed.");
+        }
+
+        /// <summary>
+        /// Ensures that procedure names always contain once set of braces so SQL parses them correctly
+        /// </summary>
+        /// <param name="ProdecureName">The name of the procedure to format</param>
+        public static string FormatProcedure(string ProdecureName)
+        {
+            Contract.Requires(!string.IsNullOrWhiteSpace(ProdecureName));
+            return "[" + ProdecureName.Trim('[').Trim(']') + "]";
         }
 
         /// <summary>
@@ -79,7 +166,6 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="TableName">The name of the table to drop</param>
         public void DropTable(string TableName) => this.ExecuteSingleQuery($"Drop table [{TableName}]");
 
-
         /// <summary>
         /// Executes a string Query
         /// </summary>
@@ -94,7 +180,6 @@ namespace Penguin.Persistence.Database.Objects
             SqlConnection conn = new SqlConnection(this.ConnectionString);
             using (SqlCommand command = new SqlCommand(Query, conn))
             {
-
                 for (int i = 0; i < args.Length; i++)
                 {
                     SqlParameter param = new SqlParameter($"@{i}", args[i]);
@@ -115,6 +200,15 @@ namespace Penguin.Persistence.Database.Objects
             return affectedRows;
         }
 
+        /// <summary>
+        /// Runs the SQL file at the provided path against the current database
+        /// </summary>
+        /// <param name="FileName">The file name to run</param>
+        /// <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
+        public async Task ExecuteScript(string FileName, string SplitOn = ScriptHelpers.DEFAULT_SPLIT)
+        {
+            await ScriptHelpers.RunSplitScript(FileName, ConnectionString, SplitOn);
+        }
 
         /// <summary>
         /// Executes a stored procedure by name
@@ -133,7 +227,6 @@ namespace Penguin.Persistence.Database.Objects
                 }
             }
         }
-
 
         /// <summary>
         /// Executes a stored procedure to a datatable
@@ -163,7 +256,6 @@ namespace Penguin.Persistence.Database.Objects
                         cmd.Parameters.Add(parameter);
                     }
 
-                    
                     // create data adapter
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
                     // this will query your database and return the result to your datatable
@@ -172,7 +264,6 @@ namespace Penguin.Persistence.Database.Objects
                     da.Dispose();
                 }
                 return dt;
-
             }
         }
 
@@ -186,7 +277,6 @@ namespace Penguin.Persistence.Database.Objects
         {
             using (DataTable dt = this.ExecuteToTable(Query, args))
             {
-
                 Dictionary<string, string> toReturn = new Dictionary<string, string>();
 
                 if (dt.Rows.Count > 1)
@@ -206,7 +296,6 @@ namespace Penguin.Persistence.Database.Objects
             }
         }
 
-
         /// <summary>
         /// Executes a query to a data table with optional parameters.
         /// </summary>
@@ -220,7 +309,6 @@ namespace Penguin.Persistence.Database.Objects
             SqlConnection conn = new SqlConnection(this.ConnectionString);
             using (SqlCommand command = new SqlCommand(Query, conn))
             {
-
                 for (int i = 0; i < args.Length; i++)
                 {
                     SqlParameter param = new SqlParameter($"@{i}", args[i]);
@@ -240,16 +328,6 @@ namespace Penguin.Persistence.Database.Objects
             }
 
             return dt;
-        }
-
-        /// <summary>
-        /// Ensures that procedure names always contain once set of braces so SQL parses them correctly
-        /// </summary>
-        /// <param name="ProdecureName">The name of the procedure to format</param>
-        public static string FormatProcedure(string ProdecureName)
-        {
-            Contract.Requires(!string.IsNullOrWhiteSpace(ProdecureName));
-            return "[" + ProdecureName.Trim('[').Trim(']') + "]";
         }
 
         /// <summary>
@@ -285,13 +363,13 @@ namespace Penguin.Persistence.Database.Objects
         {
             using (DataTable dt = ExecuteToTable("select * from information_schema.parameters where SPECIFIC_NAME = @0", Name))
             {
-
                 List<SQLParameterInfo> parameters = new List<SQLParameterInfo>();
 
                 foreach (DataRow dr in dt.Rows)
                 {
                     SQLParameterInfo thisParam = new SQLParameterInfo(dr);
-                    using (DataTable dti = this.ExecuteToTable("exec [Tools\\_GetParamDefault] @0, @1", Name, thisParam.PARAMETER_NAME)) {
+                    using (DataTable dti = this.ExecuteToTable("exec [Tools\\_GetParamDefault] @0, @1", Name, thisParam.PARAMETER_NAME))
+                    {
                         thisParam.DEFAULT = dti.GetSingle<string>().Trim('\'');
                     }
 
@@ -308,7 +386,8 @@ namespace Penguin.Persistence.Database.Objects
         /// <returns>A list of all the stored procedures in the database</returns>
         public List<string> GetStoredProcedures()
         {
-            using (DataTable dt = ExecuteToTable("select * from sys.procedures")) {
+            using (DataTable dt = ExecuteToTable("select * from sys.procedures"))
+            {
                 return dt.All<string>("name");
             }
         }
@@ -324,7 +403,6 @@ namespace Penguin.Persistence.Database.Objects
         {
             using (DataTable dt = ExecuteToTable(Query, args))
             {
-
                 if (dt.Rows == null || dt.Rows.Count == 0)
                 {
                     return default;
@@ -333,7 +411,6 @@ namespace Penguin.Persistence.Database.Objects
                 return dt.Rows[0][0].ToString().Convert<T>();
             }
         }
-
 
         /// <summary>
         /// Imports a datatable into a SQL table
@@ -421,36 +498,54 @@ namespace Penguin.Persistence.Database.Objects
         }
 
         /// <summary>
+        /// Truncates the current database and runs the SQL file at the provided path against the current database
+        /// </summary>
+        /// <param name="FileName">The file name to run</param>
+        /// <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
+        public async Task Restore(string FileName, string SplitOn = ScriptHelpers.DEFAULT_SPLIT)
+        {
+            TruncateDatabase();
+            await ScriptHelpers.RunSplitScript(FileName, ConnectionString, SplitOn);
+        }
+
+        /// <summary>
         /// Returns a count of the rows in the given table
         /// </summary>
         /// <param name="TableName">The table containing the rows to enumerate</param>
         /// <returns>A count of the table rows</returns>
         public int TableCount(string TableName)
         {
-            using (DataTable dt = ExecuteToTable($"select count(*) from {FormatProcedure(TableName)}")) {
+            using (DataTable dt = ExecuteToTable($"select count(*) from {FormatProcedure(TableName)}"))
+            {
                 return int.Parse(dt.Rows[0].ItemArray[0].ToString(), NumberStyles.Integer, CultureInfo.CurrentCulture);
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
-        private void ExecuteSingleQuery(string Text)
+        /// <summary>
+        /// Drops all non-security information from the database
+        /// </summary>
+        public void TruncateDatabase()
         {
-            using (SqlConnection connection = new SqlConnection(this.ConnectionString))
+            StaticLogger.Log("Truncating database...");
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
 
-                // Create the Command and Parameter objects.
-                using (SqlCommand command = new SqlCommand(Text, connection)
+                // Create the command and set its properties.
+                using (SqlCommand command = new SqlCommand
                 {
-                    CommandTimeout = this.CommandTimeout
+                    Connection = connection,
+                    CommandText = ResourceHelper.ReadEmbeddedScript("TruncateDatabase.sql"),
+                    CommandType = CommandType.Text,
+                    CommandTimeout = 600000
                 })
                 {
+                    // Open the connection and execute the reader.
 
                     command.ExecuteNonQuery();
                 }
-
-                connection.Close();
             }
+            StaticLogger.Log("Truncating Complete.");
         }
 
         private static string GetStringForType(Type type)
@@ -470,6 +565,26 @@ namespace Penguin.Persistence.Database.Objects
             }
 
             return $"{toReturn}{postFix}";
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        private void ExecuteSingleQuery(string Text)
+        {
+            using (SqlConnection connection = new SqlConnection(this.ConnectionString))
+            {
+                connection.Open();
+
+                // Create the Command and Parameter objects.
+                using (SqlCommand command = new SqlCommand(Text, connection)
+                {
+                    CommandTimeout = this.CommandTimeout
+                })
+                {
+                    command.ExecuteNonQuery();
+                }
+
+                connection.Close();
+            }
         }
     }
 }

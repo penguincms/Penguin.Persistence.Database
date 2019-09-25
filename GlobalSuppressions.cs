@@ -1,7 +1,6 @@
-﻿
-// This file is used by Code Analysis to maintain SuppressMessage 
+﻿// This file is used by Code Analysis to maintain SuppressMessage
 // attributes that are applied to this project.
-// Project-level suppressions either have no target or are given 
+// Project-level suppressions either have no target or are given
 // a specific target and scoped to a namespace, type, member, etc.
 
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "<Pending>", Scope = "member", Target = "~M:Penguin.Persistence.Database.Extensions.DataTableExtensions.Single``1(System.Data.DataTable,System.Boolean)~``0")]
@@ -14,4 +13,6 @@
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "<Pending>", Scope = "member", Target = "~M:Penguin.Persistence.Database.TypeConverter.Find(System.Data.SqlDbType)~Penguin.Persistence.Database.TypeConverter.DbTypeMapEntry")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "<Pending>", Scope = "member", Target = "~M:Penguin.Persistence.Database.TypeConverter.Find(System.Data.DbType)~Penguin.Persistence.Database.TypeConverter.DbTypeMapEntry")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1720:Identifier contains type name", Justification = "<Pending>", Scope = "member", Target = "~F:Penguin.Persistence.Database.ConnectionType.String")]
-
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>", Scope = "member", Target = "~M:Penguin.Persistence.Database.Objects.DatabaseInstance.TruncateDatabase")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2200:Rethrow to preserve stack details.", Justification = "<Pending>", Scope = "member", Target = "~M:Penguin.Persistence.Database.Helpers.ScriptHelpers.RunSplitScript(System.String,System.String,System.String)")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>", Scope = "member", Target = "~M:Penguin.Persistence.Database.Helpers.ScriptHelpers.RunSplitScript(System.String,System.String,System.String)")]
