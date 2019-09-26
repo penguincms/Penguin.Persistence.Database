@@ -9,6 +9,7 @@ using System.Linq;
 using Penguin.Threading;
 using System.Text;
 using System.Threading.Tasks;
+using Penguin.Extensions.Strings;
 
 namespace Penguin.Persistence.Database.Helpers
 {
@@ -47,6 +48,15 @@ namespace Penguin.Persistence.Database.Helpers
                                 {
                                     Console.WriteLine($"Executing Command {cmd.CommandNumber} - {Math.Round(cmd.Progress, 2)}%");
 
+                                    if(cmd.Text.StartsWith("GO\r\n"))
+                                    {
+                                        cmd.Text = cmd.Text.From("GO\r\n");
+                                    }
+
+                                    if(cmd.Text.EndsWith("\r\nGO"))
+                                    {
+                                        cmd.Text = cmd.Text.To("\r\nGO")
+                                    }
                                     command.CommandText = cmd.Text;
 
                                     command.ExecuteNonQuery();
