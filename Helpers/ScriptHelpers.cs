@@ -55,7 +55,7 @@ namespace Penguin.Persistence.Database.Helpers
 
                                     if(cmd.Text.EndsWith("\r\nGO"))
                                     {
-                                        cmd.Text = cmd.Text.To("\r\nGO")
+                                        cmd.Text = cmd.Text.To("\r\nGO");
                                     }
                                     command.CommandText = cmd.Text;
 
