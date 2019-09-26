@@ -10,6 +10,7 @@ using Penguin.Threading;
 using System.Text;
 using System.Threading.Tasks;
 using Penguin.Extensions.Strings;
+using Penguin.Debugging;
 
 namespace Penguin.Persistence.Database.Helpers
 {
@@ -46,7 +47,7 @@ namespace Penguin.Persistence.Database.Helpers
                             {
                                 try
                                 {
-                                    Console.WriteLine($"Executing Command {cmd.CommandNumber} - {Math.Round(cmd.Progress, 2)}%");
+                                    StaticLogger.Log($"Executing Command {cmd.CommandNumber} - {Math.Round(cmd.Progress, 2)}%");
 
                                     if(cmd.Text.StartsWith("GO\r\n"))
                                     {
@@ -74,7 +75,7 @@ namespace Penguin.Persistence.Database.Helpers
 
                                     if (!AcceptableErrors.Any(ae => ex.Message.Contains(ae)))
                                     {
-                                        Console.WriteLine(cmd.Text + Environment.NewLine + ex.Message);
+                                        StaticLogger.Log(cmd.Text + Environment.NewLine + ex.Message);
                                         throw ex;
                                     }
                                 }
