@@ -90,10 +90,12 @@ namespace Penguin.Persistence.Database.Helpers
 
             BackgroundWorker FileReadWorker = BackgroundWorker.Create((worker) =>
             {
+                
                 using (FileStream stream = File.OpenRead(FilePath))
                 {
                     using (StreamReader reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks, bufferSize, false)) 
                     {
+                        decimal streamLength = reader.BaseStream.Length;
                         // Open the connection and execute the reader.
 
                         int BufferLength = SplitOn.Length;
@@ -135,7 +137,7 @@ namespace Penguin.Persistence.Database.Helpers
 
                             if (breakScript)
                             {
-                                AsyncSqlCommand icmd = new AsyncSqlCommand(currentCommand.ToString(), ((reader.BaseStream.Position / (decimal)reader.BaseStream.Length) * 100), ++commandNumber);
+                                AsyncSqlCommand icmd = new AsyncSqlCommand(currentCommand.ToString(), ((reader.BaseStream.Position / streamLength) * 100), ++commandNumber);
 
                                 while (Commands.Count > 5)
                                 {
@@ -193,7 +195,7 @@ namespace Penguin.Persistence.Database.Helpers
 
                         } while (true);
 
-                        AsyncSqlCommand lcmd = new AsyncSqlCommand(currentCommand.ToString(), ((reader.BaseStream.Position / (decimal)reader.BaseStream.Length) * 100), commandNumber);
+                        AsyncSqlCommand lcmd = new AsyncSqlCommand(currentCommand.ToString(), ((reader.BaseStream.Position / streamLength) * 100), commandNumber);
 
                         Commands.Enqueue(lcmd);
 
