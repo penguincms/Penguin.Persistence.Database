@@ -3,7 +3,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using Penguin.Threading;
@@ -11,6 +10,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Penguin.Extensions.Strings;
 using Penguin.Debugging;
+using Microsoft.SqlServer.Management.Smo;
+using System.Data.SqlClient;
+using Microsoft.SqlServer.Management.Common;
 
 namespace Penguin.Persistence.Database.Helpers
 {
@@ -29,6 +31,8 @@ namespace Penguin.Persistence.Database.Helpers
             {
                 using (SqlConnection connection = new SqlConnection(ConnectionString))
                 {
+                    Server server = new Server(new ServerConnection(connection));
+
                     connection.Open();
 
                     // Create the command and set its properties.
@@ -48,19 +52,9 @@ namespace Penguin.Persistence.Database.Helpers
                                 try
                                 {
                                     StaticLogger.Log($"Executing Command {cmd.CommandNumber} - {Math.Round(cmd.Progress, 2)}%");
-
-                                    if(cmd.Text.StartsWith("GO\r\n"))
-                                    {
-                                        cmd.Text = cmd.Text.From("GO\r\n");
-                                    }
-
-                                    if(cmd.Text.EndsWith("\r\nGO"))
-                                    {
-                                        cmd.Text = cmd.Text.To("\r\nGO");
-                                    }
-                                    command.CommandText = cmd.Text;
-
-                                    command.ExecuteNonQuery();
+   
+                                    server.ConnectionContext.ExecuteNonQuery(cmd.Text);
+                                    
                                 }
                                 catch (Exception ex)
                                 {
@@ -69,8 +63,7 @@ namespace Penguin.Persistence.Database.Helpers
                                         "is not a valid login or you do not have permission",
                                         "User does not have permission to perform this action",
                                         "not found. Check the name again.",
-                                        " already exists in the current database.",
-                                        " 'GO'."
+                                        " already exists in the current database."
                                     };
 
                                     if (!AcceptableErrors.Any(ae => ex.Message.Contains(ae)))
