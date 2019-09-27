@@ -32,16 +32,8 @@ namespace Penguin.Persistence.Database.Helpers
                 using (SqlConnection connection = new SqlConnection(ConnectionString))
                 {
                     Server server = new Server(new ServerConnection(connection));
-
+                    server.ConnectionContext.StatementTimeout = TimeOut;
                     connection.Open();
-
-                    // Create the command and set its properties.
-                    SqlCommand command = new SqlCommand
-                    {
-                        Connection = connection,
-                        CommandType = CommandType.Text,
-                        CommandTimeout = TimeOut
-                    };
 
                     while (!ReadComplete || Commands.Any())
                     {
