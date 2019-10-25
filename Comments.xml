@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <doc>
     <assembly>
-        <name>Penguin.Persistence.Database</name>
+        <name>Penguin.Persistence.Database.Local</name>
     </assembly>
     <members>
         <member name="T:Penguin.Persistence.Database.ConnectionString">

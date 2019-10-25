@@ -1,0 +1,28 @@
+Microsoft (R) Build Engine version 16.3.0+0f4c62fea for .NET Core
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Restore completed in 29.69 ms for C:\Penguin\Repositories\Penguin.Reflection.Abstractions\Penguin.Reflection.Abstractions.Local.csproj.
+  Restore completed in 29.71 ms for C:\Penguin\Repositories\Penguin.Extensions.String\Penguin.Extensions.String.Local.csproj.
+  Restore completed in 29.71 ms for C:\Penguin\Repositories\Penguin.Extensions.Exceptions\Penguin.Extensions.Exceptions.Local.csproj.
+  Restore completed in 29.69 ms for C:\Penguin\Repositories\Penguin.Debugging\Penguin.Debugging.Local.csproj.
+  Restore completed in 29.72 ms for C:\Penguin\Repositories\Penguin.Entities.Abstractions\Penguin.Entities.Abstractions.Local.csproj.
+  Restore completed in 29.7 ms for C:\Penguin\Repositories\Penguin.Persistence.Abstractions\Penguin.Persistence.Abstractions.Local.csproj.
+  Restore completed in 29.84 ms for C:\Penguin\Repositories\Penguin.Persistence.Database\Penguin.Persistence.Database.Local.csproj.
+  Restore completed in 29.68 ms for C:\Penguin\Repositories\Penguin.Reflection.Extensions\Penguin.Reflection.Extensions.Local.csproj.
+  Restore completed in 0.85 ms for C:\Penguin\Repositories\Penguin.Threading.BackgroundWorker\Penguin.Threading.BackgroundWorker.Local.csproj.
+  Penguin.Reflection.Abstractions.Local -> C:\Penguin\Repositories\Penguin.Reflection.Abstractions\bin\Release\netstandard2.0\Penguin.Reflection.Abstractions.Local.dll
+  Penguin.Extensions.String.Local -> C:\Penguin\Repositories\Penguin.Extensions.String\bin\Release\netstandard2.0\Penguin.Extensions.String.Local.dll
+  Penguin.Extensions.Exceptions.Local -> C:\Penguin\Repositories\Penguin.Extensions.Exceptions\bin\Release\netstandard2.0\Penguin.Extensions.Exceptions.Local.dll
+  Penguin.Entities.Abstractions.Local -> C:\Penguin\Repositories\Penguin.Entities.Abstractions\bin\Release\netstandard2.0\Penguin.Entities.Abstractions.Local.dll
+  Penguin.Threading.BackgroundWorker.Local -> C:\Penguin\Repositories\Penguin.Threading.BackgroundWorker\bin\Release\netstandard2.0\Penguin.Threading.BackgroundWorker.Local.dll
+  Penguin.Debugging.Local -> C:\Penguin\Repositories\Penguin.Debugging\bin\Release\netstandard2.0\Penguin.Debugging.Local.dll
+  Penguin.Reflection.Extensions.Local -> C:\Penguin\Repositories\Penguin.Reflection.Extensions\bin\Release\netstandard2.0\Penguin.Reflection.Extensions.Local.dll
+  Penguin.Persistence.Abstractions.Local -> C:\Penguin\Repositories\Penguin.Persistence.Abstractions\bin\Release\netstandard2.0\Penguin.Persistence.Abstractions.Local.dll
+  Penguin.Persistence.Database.Local -> C:\Penguin\Repositories\Penguin.Persistence.Database\bin\Release\netstandard2.0\Penguin.Persistence.Database.Local.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.89
+
