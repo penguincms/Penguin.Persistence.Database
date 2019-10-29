@@ -9,9 +9,9 @@
   <ItemGroup>
     <None Remove="Generate\StoredProcedures\Tools\_GetAllProcedures.sql" />
     <None Remove="Generate\StoredProcedures\Tools\_GetParamDefault.sql" />
-    <PackageReference Include="Penguin.Debugging" Version="2.0.1-T9LXGUJ" />
-    <PackageReference Include="Penguin.Persistence.Abstractions" Version="3.0.1-T9LXGUJ" />
-    <PackageReference Include="Penguin.Threading.BackgroundWorker" Version="1.0.4-T9LXGUJ" />
+    <PackageReference Include="Penguin.Debugging" Version="2.0.2-T9M1HHH" />
+    <PackageReference Include="Penguin.Persistence.Abstractions" Version="3.0.2-T9M1HHH" />
+    <PackageReference Include="Penguin.Threading.BackgroundWorker" Version="1.0.5-T9M1HHH" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Generate\StoredProcedures\Tools\_GetAllProcedures.sql" />
