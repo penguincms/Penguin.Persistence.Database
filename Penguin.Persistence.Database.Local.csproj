@@ -5,17 +5,19 @@
     <PackageProjectUrl>https://github.com/penguincms/Penguin.Persistence.Database</PackageProjectUrl>
     <Version>2.0.8</Version>
     <Description>Light set of classes used to allow Penguins to access MSSQL databases in a slightly-higher-level than ADO but not ORM. Created as a method of bypassing ORM for fallback without needing to reinvent the wheel in ADO. Includes some nice Database access methods as well as a method for converting an IEnumerable to a DataTable using Properties as columns. Also contains a SQL-.NET Type conversion helper</Description>
+    <AssemblyName>Penguin.Persistence.Database</AssemblyName>
+    <RootNamespace>Penguin.Persistence.Database</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Generate\StoredProcedures\Tools\_GetAllProcedures.sql" />
     <None Remove="Generate\StoredProcedures\Tools\_GetParamDefault.sql" />
     <ProjectReference Include="..\Penguin.Debugging\Penguin.Debugging.Local.csproj" />
+    <ProjectReference Include="..\Penguin.Entities.Abstractions\Penguin.Entities.Abstractions.Local.csproj" />
     <ProjectReference Include="..\Penguin.Extensions.Exceptions\Penguin.Extensions.Exceptions.Local.csproj" />
     <ProjectReference Include="..\Penguin.Extensions.String\Penguin.Extensions.String.Local.csproj" />
     <ProjectReference Include="..\Penguin.Persistence.Abstractions\Penguin.Persistence.Abstractions.Local.csproj" />
-    <ProjectReference Include="..\Penguin.Entities.Abstractions\Penguin.Entities.Abstractions.Local.csproj" />
-    <ProjectReference Include="..\Penguin.Reflection.Extensions\Penguin.Reflection.Extensions.Local.csproj" />
     <ProjectReference Include="..\Penguin.Reflection.Abstractions\Penguin.Reflection.Abstractions.Local.csproj" />
+    <ProjectReference Include="..\Penguin.Reflection.Extensions\Penguin.Reflection.Extensions.Local.csproj" />
     <ProjectReference Include="..\Penguin.Threading.BackgroundWorker\Penguin.Threading.BackgroundWorker.Local.csproj" />
   </ItemGroup>
   <ItemGroup>
