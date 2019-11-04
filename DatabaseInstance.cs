@@ -236,6 +236,92 @@ namespace Penguin.Persistence.Database.Objects
         /// </summary>
         /// <param name="ProcedureName">The name of the procedure to execute</param>
         /// <param name="parameters">The parameters to pass into the stored procedure</param>
+        /// <returns>An IEnumerable of object representing the first value of each row </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params string[] parameters)
+        {
+            foreach (object o in ExecuteStoredProcedureToList(ProcedureName, parameters))
+            {
+                yield return o.ToString().Convert<T>();
+            }
+        }
+
+        /// <summary>
+        /// Executes a stored procedure to a datatable
+        /// </summary>
+        /// <param name="ProcedureName">The name of the procedure to execute</param>
+        /// <param name="parameters">The parameters to pass into the stored procedure</param>
+        /// <returns>An IEnumerable of object representing the first value of each row </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        public IEnumerable<object> ExecuteStoredProcedureToList(string ProcedureName, params string[] parameters)
+        {
+            using (DataTable dt = ExecuteStoredProcedureToTable(ProcedureName, parameters))
+            {
+                foreach (DataRow dr in dt.Rows)
+                {
+                    yield return dr[0];
+                }
+            }
+        }
+
+        /// <summary>
+        /// Executes a stored procedure to a datatable
+        /// </summary>
+        /// <param name="ProcedureName">The name of the procedure to execute</param>
+        /// <param name="parameters">The parameters to pass into the stored procedure</param>
+        /// <returns>An IEnumerable of object representing the first value of each row </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params object[] parameters) => ExecuteStoredProcedureToList<T>(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
+
+        /// <summary>
+        /// Executes a stored procedure to a datatable
+        /// </summary>
+        /// <param name="ProcedureName">The name of the procedure to execute</param>
+        /// <param name="parameters">The parameters to pass into the stored procedure</param>
+        /// <returns>An IEnumerable of object representing the first value of each row </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        public IEnumerable<object> ExecuteStoredProcedureToList(string ProcedureName, params object[] parameters) => ExecuteStoredProcedureToList(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
+
+        /// <summary>
+        /// Executes a stored procedure to a datatable
+        /// </summary>
+        /// <param name="ProcedureName">The name of the procedure to execute</param>
+        /// <param name="parameters">The parameters to pass into the stored procedure</param>
+        /// <returns>A datatable containing the results of the execution</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        public DataTable ExecuteStoredProcedureToTable(string ProcedureName, params string[] parameters)
+        {
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                DataTable dt = new DataTable();
+
+                using (SqlCommand cmd = new SqlCommand(ProcedureName, conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandTimeout = this.CommandTimeout;
+
+                    foreach (SqlParameter parameter in FormatSqlParameters(ProcedureName, parameters))
+                    {
+                        cmd.Parameters.Add(parameter);
+                    }
+
+                    // create data adapter
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    // this will query your database and return the result to your datatable
+                    da.Fill(dt);
+                    conn.Close();
+                    da.Dispose();
+                }
+                return dt;
+            }
+        }
+
+        /// <summary>
+        /// Executes a stored procedure to a datatable
+        /// </summary>
+        /// <param name="ProcedureName">The name of the procedure to execute</param>
+        /// <param name="parameters">The parameters to pass into the stored procedure</param>
         /// <returns>A datatable containing the results of the execution</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
         public DataTable ExecuteStoredProcedureToTable(string ProcedureName, List<SqlParameter> parameters)
@@ -348,12 +434,33 @@ namespace Penguin.Persistence.Database.Objects
 
             foreach (SqlParameter sqlParameter in parameters)
             {
-                SQLParameterInfo matchingDbParam = procParams.First(p => p.PARAMETER_NAME == sqlParameter.ParameterName);
+                sqlParameter.Value = FormatParameter(procParams.First(p => p.PARAMETER_NAME == sqlParameter.ParameterName), sqlParameter.Value);
+            }
+        }
 
-                if (matchingDbParam.DATA_TYPE == SqlDbType.DateTime || matchingDbParam.DATA_TYPE == SqlDbType.DateTime2)
+        /// <summary>
+        /// Ensures that data coming from the client is convertable for SQL.
+        /// Created because HTML5 posts datetime with a "T" in the middle which
+        /// SQL doesn't like
+        /// </summary>
+        /// <param name="ProdecureName">The procedure name that we will be running to gather parameter information</param>
+        /// <param name="parameters">The parameter string list to ensure compatability</param>
+        public IEnumerable<SqlParameter> FormatSqlParameters(string ProdecureName, IEnumerable<string> parameters)
+        {
+            Contract.Requires(parameters != null);
+
+            List<SQLParameterInfo> procParams = this.GetParameters(ProdecureName);
+
+            for (int i = 0; i < parameters.Count(); i++)
+            {
+                SQLParameterInfo procParam = procParams.ElementAt(i);
+                yield return new SqlParameter()
                 {
-                    sqlParameter.Value = DateTime.Parse(sqlParameter.Value.ToString(), CultureInfo.CurrentCulture).ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.CurrentCulture);
-                }
+                    Value = FormatParameter(procParam, parameters.ElementAt(i))?.ToString(),
+                    DbType = TypeConverter.ToDbType(procParam.DATA_TYPE),
+                    ParameterName = procParam.PARAMETER_NAME,
+                    SqlDbType = procParam.DATA_TYPE
+                };
             }
         }
 
@@ -588,6 +695,21 @@ namespace Penguin.Persistence.Database.Objects
 
                 connection.Close();
             }
+        }
+
+        private object FormatParameter(SQLParameterInfo dbParam, object ParamValue)
+        {
+            if(ParamValue is null)
+            {
+                return null;
+            }
+
+            if (dbParam.DATA_TYPE == SqlDbType.DateTime || dbParam.DATA_TYPE == SqlDbType.DateTime2)
+            {
+                return DateTime.Parse(ParamValue.ToString(), CultureInfo.CurrentCulture).ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.CurrentCulture);
+            }
+
+            return ParamValue;
         }
     }
 }
