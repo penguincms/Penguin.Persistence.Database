@@ -232,7 +232,7 @@ namespace Penguin.Persistence.Database.Objects
         }
 
         /// <summary>
-        /// Executes a stored procedure to a datatable
+        /// Executes a stored procedure to a List
         /// </summary>
         /// <param name="ProcedureName">The name of the procedure to execute</param>
         /// <param name="parameters">The parameters to pass into the stored procedure</param>
@@ -243,6 +243,36 @@ namespace Penguin.Persistence.Database.Objects
             foreach (object o in ExecuteStoredProcedureToList(ProcedureName, parameters))
             {
                 yield return o.ToString().Convert<T>();
+            }
+        }
+
+        /// <summary>
+        /// Executes a query to a List
+        /// </summary>
+        /// <param name="ProcedureName">The name of the procedure to execute</param>
+        /// <param name="parameters">The parameters to pass into the stored procedure</param>
+        /// <returns>An IEnumerable of object representing the first value of each row </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        public IEnumerable<T> ExecuteToList<T>(string query, params string[] args)
+        {
+            foreach (object o in ExecuteToList(query, args))
+            {
+                yield return o.ToString().Convert<T>();
+            }
+        }
+
+        /// <summary>
+        /// Executes a query to a List
+        /// </summary>
+        /// <param name="ProcedureName">The name of the procedure to execute</param>
+        /// <param name="parameters">The parameters to pass into the stored procedure</param>
+        /// <returns>An IEnumerable of object representing the first value of each row </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        public IEnumerable<object> ExecuteToList(string query, params string[] args)
+        {
+            foreach(DataRow dataRow in ExecuteToTable(query, args).Rows)
+            {
+                yield return dataRow[0];
             }
         }
 
