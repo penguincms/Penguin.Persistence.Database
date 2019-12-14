@@ -44,6 +44,16 @@ namespace Penguin.Persistence.Database.Objects
             this.CommandTimeout = commandTimeout;
         }
 
+        public DatabaseInstance(string server, string database, int commandTimeout = 300) : this($"Server={server};Database={database};Trusted_Connection=True;", commandTimeout)
+        {
+
+        }
+
+        public DatabaseInstance(string server, string database, string username, string password, int commandTimeout = 300) : this($"Server={server};Database={database};User Id={username};Password={password};", commandTimeout)
+        {
+
+        }
+
         /// <summary>
         /// Backs up an entire database schema to a file, including data
         /// </summary>
