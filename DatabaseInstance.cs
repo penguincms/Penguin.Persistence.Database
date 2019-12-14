@@ -737,6 +737,9 @@ namespace Penguin.Persistence.Database.Objects
             if (dbParam.DATA_TYPE == SqlDbType.DateTime || dbParam.DATA_TYPE == SqlDbType.DateTime2)
             {
                 return DateTime.Parse(ParamValue.ToString(), CultureInfo.CurrentCulture).ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.CurrentCulture);
+            } else if (dbParam.DATA_TYPE == SqlDbType.Date)
+            {
+                return DateTime.Parse(ParamValue.ToString(), CultureInfo.CurrentCulture).ToString("yyyy-MM-dd", CultureInfo.CurrentCulture);
             }
 
             return ParamValue;

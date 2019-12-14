@@ -28,6 +28,10 @@ namespace Penguin.Persistence.Database
             _DbTypeList.Add(dbTypeMapEntry);
 
             dbTypeMapEntry
+            = new DbTypeMapEntry(typeof(DateTime), DbType.Date, SqlDbType.Date);
+            _DbTypeList.Add(dbTypeMapEntry);
+
+            dbTypeMapEntry
             = new DbTypeMapEntry(typeof(decimal), DbType.Decimal, SqlDbType.Decimal);
             _DbTypeList.Add(dbTypeMapEntry);
 
@@ -164,7 +168,7 @@ namespace Penguin.Persistence.Database
             if (retObj == null)
             {
                 throw
-                new ApplicationException(UnsupportedTypeMessage);
+                new ApplicationException(UnsupportedTypeMessage + $": {type.ToString()}");
             }
 
             return (DbTypeMapEntry)retObj;
@@ -185,7 +189,7 @@ namespace Penguin.Persistence.Database
             if (retObj == null)
             {
                 throw
-                new ApplicationException(UnsupportedDbTypeMessage);
+                new ApplicationException(UnsupportedDbTypeMessage + $": {dbType.ToString()}");
             }
 
             return (DbTypeMapEntry)retObj;
@@ -206,7 +210,7 @@ namespace Penguin.Persistence.Database
             if (retObj == null)
             {
                 throw
-                new ApplicationException(UnsupportedSQLTypeMessage);
+                new ApplicationException(UnsupportedSQLTypeMessage + $": {sqlDbType.ToString()}" );
             }
 
             return (DbTypeMapEntry)retObj;
