@@ -84,6 +84,11 @@ namespace Penguin.Persistence.Database.Helpers
                         decimal streamLength = reader.BaseStream.Length;
                         // Open the connection and execute the reader.
 
+                        if(streamLength == 0)
+                        {
+                            throw new Exception($"Stream length of 0 for file {FilePath}");
+                        }
+
                         int BufferLength = SplitOn.Length;
 
                         char[] buffer = new char[BufferLength];

@@ -732,7 +732,7 @@ namespace Penguin.Persistence.Database.Objects
                 {
                     command.ExecuteNonQuery();
                 }
-
+                
                 connection.Close();
             }
         }
