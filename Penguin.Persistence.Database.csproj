@@ -13,7 +13,7 @@
     <None Remove="Generate\StoredProcedures\Tools\_GetParamDefault.sql" />
     <PackageReference Include="Penguin.Debugging" Version="2.0.2-T9MJL4F" />
     <PackageReference Include="Penguin.Persistence.Abstractions" Version="3.0.2-T9MJL4F" />
-    <PackageReference Include="Penguin.Threading.BackgroundWorker" Version="1.0.5-T9MJL4F" />
+    <PackageReference Include="Penguin.Threading.BackgroundWorker" Version="1.0.5-T9P1VVS" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Generate\StoredProcedures\Tools\_GetAllProcedures.sql" />
