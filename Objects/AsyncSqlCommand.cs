@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Penguin.Persistence.Database.Objects
+﻿namespace Penguin.Persistence.Database.Objects
 {
     internal class AsyncSqlCommand
     {

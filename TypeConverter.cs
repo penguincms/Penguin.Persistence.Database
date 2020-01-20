@@ -210,7 +210,7 @@ namespace Penguin.Persistence.Database
             if (retObj == null)
             {
                 throw
-                new ApplicationException(UnsupportedSQLTypeMessage + $": {sqlDbType.ToString()}" );
+                new ApplicationException(UnsupportedSQLTypeMessage + $": {sqlDbType.ToString()}");
             }
 
             return (DbTypeMapEntry)retObj;

@@ -50,7 +50,7 @@ namespace Penguin.Persistence.Database
         {
             Contract.Requires(!string.IsNullOrWhiteSpace(Script));
 
-            ConnectionStrings = new List<string>();
+            this.ConnectionStrings = new List<string>();
 
             this.Body = this.RemoveComments(Script).From("create procedure ", true, StringComparison.CurrentCultureIgnoreCase).ToLast("\nGO", false, StringComparison.CurrentCultureIgnoreCase).Trim();
 
@@ -126,9 +126,9 @@ namespace Penguin.Persistence.Database
 
             string parsedNewName = "[" + newName.Trim('[').Trim(']') + "]";
 
-            int NameIndex = Body.AllIndexesOf(this.Name).First(i => i > Body.IndexOf("create procedure ", StringComparison.OrdinalIgnoreCase));
+            int NameIndex = this.Body.AllIndexesOf(this.Name).First(i => i > this.Body.IndexOf("create procedure ", StringComparison.OrdinalIgnoreCase));
 
-            Body = Body.Substring(0, NameIndex) + parsedNewName + Body.Substring(NameIndex + this.Name.Length);
+            this.Body = this.Body.Substring(0, NameIndex) + parsedNewName + this.Body.Substring(NameIndex + this.Name.Length);
 
             this.Name = parsedNewName;
         }

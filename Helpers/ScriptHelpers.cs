@@ -1,18 +1,16 @@
-﻿using Penguin.Persistence.Database.Objects;
+﻿using Microsoft.SqlServer.Management.Common;
+using Microsoft.SqlServer.Management.Smo;
+using Penguin.Debugging;
+using Penguin.Persistence.Database.Objects;
+using Penguin.Threading;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
-using Penguin.Threading;
 using System.Text;
 using System.Threading.Tasks;
-using Penguin.Extensions.Strings;
-using Penguin.Debugging;
-using Microsoft.SqlServer.Management.Smo;
-using System.Data.SqlClient;
-using Microsoft.SqlServer.Management.Common;
 
 namespace Penguin.Persistence.Database.Helpers
 {
@@ -23,6 +21,7 @@ namespace Penguin.Persistence.Database.Helpers
         public static async Task RunSplitScript(string FilePath, string ConnectionString, int TimeOut = 0, string SplitOn = DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = -1)
         {
             DateTime start = DateTime.Now;
+            Exception toThrow = null;
 
             ConcurrentQueue<AsyncSqlCommand> Commands = new ConcurrentQueue<AsyncSqlCommand>();
             bool ReadComplete = false;
@@ -44,9 +43,9 @@ namespace Penguin.Persistence.Database.Helpers
                                 try
                                 {
                                     StaticLogger.Log($"Executing Command {cmd.CommandNumber} - {Math.Round(cmd.Progress, 2)}%");
-   
+
                                     server.ConnectionContext.ExecuteNonQuery(cmd.Text);
-                                    
+
                                 }
                                 catch (Exception ex)
                                 {
@@ -58,9 +57,10 @@ namespace Penguin.Persistence.Database.Helpers
                                         " already exists in the current database."
                                     };
 
-                                    if (!AcceptableErrors.Any(ae => ex.Message.Contains(ae)))
+                                    if (!AcceptableErrors.Any(ae => ex.Message.Contains(ae)) && (ex.InnerException == null || !AcceptableErrors.Any(ae => ex.InnerException.Message.Contains(ae))))
                                     {
                                         StaticLogger.Log(cmd.Text + Environment.NewLine + ex.Message);
+                                        toThrow = ex;
                                         throw ex;
                                     }
                                 }
@@ -76,15 +76,15 @@ namespace Penguin.Persistence.Database.Helpers
 
             BackgroundWorker FileReadWorker = BackgroundWorker.Create((worker) =>
             {
-                
+
                 using (FileStream stream = File.OpenRead(FilePath))
                 {
-                    using (StreamReader reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks, bufferSize, false)) 
+                    using (StreamReader reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks, bufferSize, false))
                     {
                         decimal streamLength = reader.BaseStream.Length;
                         // Open the connection and execute the reader.
 
-                        if(streamLength == 0)
+                        if (streamLength == 0)
                         {
                             throw new Exception($"Stream length of 0 for file {FilePath}");
                         }
@@ -138,7 +138,14 @@ namespace Penguin.Persistence.Database.Helpers
                                     }
                                     else
                                     {
-                                        throw new Exception("Sql worker ended unexpectedly");
+                                        if (toThrow != null)
+                                        {
+                                            throw toThrow;
+                                        }
+                                        else
+                                        {
+                                            throw new Exception("Sql worker ended unexpectedly");
+                                        }
                                     }
                                 }
 

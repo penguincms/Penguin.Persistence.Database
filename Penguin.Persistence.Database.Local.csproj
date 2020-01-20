@@ -11,6 +11,7 @@
   <ItemGroup>
     <None Remove="Generate\StoredProcedures\Tools\_GetAllProcedures.sql" />
     <None Remove="Generate\StoredProcedures\Tools\_GetParamDefault.sql" />
+    <None Remove="Scripts\TruncateDatabase.sql" />
     <ProjectReference Include="..\Penguin.Debugging\Penguin.Debugging.Local.csproj" />
     <ProjectReference Include="..\Penguin.Entities.Abstractions\Penguin.Entities.Abstractions.Local.csproj" />
     <ProjectReference Include="..\Penguin.Extensions.Exceptions\Penguin.Extensions.Exceptions.Local.csproj" />
@@ -23,9 +24,10 @@
   <ItemGroup>
     <EmbeddedResource Include="Generate\StoredProcedures\Tools\_GetAllProcedures.sql" />
     <EmbeddedResource Include="Generate\StoredProcedures\Tools\_GetParamDefault.sql" />
+    <EmbeddedResource Include="Scripts\TruncateDatabase.sql" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="150.18147.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.7.0" />
+    <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="150.18208.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.0" />
   </ItemGroup>
 </Project>
