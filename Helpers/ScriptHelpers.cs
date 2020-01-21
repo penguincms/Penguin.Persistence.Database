@@ -18,10 +18,12 @@ namespace Penguin.Persistence.Database.Helpers
     {
         public const string DEFAULT_SPLIT = "\r\nGO\r\n";
 
-        public static async Task RunSplitScript(string FilePath, string ConnectionString, int TimeOut = 0, string SplitOn = DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = -1)
+        public static async Task RunSplitScript(string FilePath, string ConnectionString, int TimeOut = 0, string SplitOn = DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = 4096)
         {
             DateTime start = DateTime.Now;
             Exception toThrow = null;
+            
+            encoding = encoding ?? Encoding.Default;
 
             ConcurrentQueue<AsyncSqlCommand> Commands = new ConcurrentQueue<AsyncSqlCommand>();
             bool ReadComplete = false;
@@ -61,7 +63,7 @@ namespace Penguin.Persistence.Database.Helpers
                                     {
                                         StaticLogger.Log(cmd.Text + Environment.NewLine + ex.Message);
                                         toThrow = ex;
-                                        throw ex;
+                                        throw;
                                     }
                                 }
                             }

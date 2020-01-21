@@ -168,22 +168,30 @@ namespace Penguin.Persistence.Database.Objects
 
             if (Compress)
             {
-                string zipName = FileName + ".zip";
-
-                if (System.IO.File.Exists(zipName))
-                {
-                    System.IO.File.Delete(zipName);
-                }
-
-                using (ZipArchive zip = ZipFile.Open(zipName, ZipArchiveMode.Create))
-                {
-                    zip.CreateEntryFromFile(FileName, new System.IO.FileInfo(FileName).Name, CompressionLevel.Optimal);
-                }
-
-                System.IO.File.Delete(FileName);
+                Zip(FileName);
             }
 
             Console.WriteLine($"Backup completed.");
+        }
+
+        public static void Zip(string FileName, bool Delete = true)
+        {
+            string zipName = FileName + ".zip";
+
+            if (System.IO.File.Exists(zipName))
+            {
+                System.IO.File.Delete(zipName);
+            }
+
+            using (ZipArchive zip = ZipFile.Open(zipName, ZipArchiveMode.Create))
+            {
+                zip.CreateEntryFromFile(FileName, new System.IO.FileInfo(FileName).Name, CompressionLevel.Optimal);
+            }
+
+            if (Delete)
+            {
+                System.IO.File.Delete(FileName);
+            }
         }
 
         /// <summary>
@@ -318,6 +326,8 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="bufferSize">The buffer size for the stream reader</param>
         public async Task ExecuteScript(string FileName, string SplitOn = ScriptHelpers.DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = -1)
         {
+            encoding = encoding ?? Encoding.Default;
+
             await ScriptHelpers.RunSplitScript(FileName, this.ConnectionString, this.CommandTimeout, SplitOn, encoding, detectEncodingFromByteOrderMarks, bufferSize);
         }
 
@@ -756,17 +766,19 @@ namespace Penguin.Persistence.Database.Objects
         /// </summary>
         /// <param name="FileName">The file name to run</param>
         /// <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
-        public async Task Restore(string FileName, string SplitOn = ScriptHelpers.DEFAULT_SPLIT) => Restore(FileName, this.ConnectionString, this.CommandTimeout, SplitOn);
+        public async Task Restore(string FileName, string SplitOn = ScriptHelpers.DEFAULT_SPLIT, Encoding encoding = null) => Restore(FileName, this.ConnectionString, this.CommandTimeout, SplitOn, encoding ?? Encoding.Default);
 
         /// <summary>
         /// Truncates the database and runs the SQL file at the provided path against the current database
         /// </summary>
         /// <param name="FileName">The file name to run</param>
         /// <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
-        public static async Task Restore(string FileName, string ConnectionString, int CommandTimeout = 300, string SplitOn = ScriptHelpers.DEFAULT_SPLIT)
+        public static async Task Restore(string FileName, string ConnectionString, int CommandTimeout = 300, string SplitOn = ScriptHelpers.DEFAULT_SPLIT, Encoding encoding = null)
         {
+            encoding = encoding ?? Encoding.Default;
+
             TruncateDatabase(ConnectionString);
-            await ScriptHelpers.RunSplitScript(FileName, ConnectionString, CommandTimeout, SplitOn);
+            await ScriptHelpers.RunSplitScript(FileName, ConnectionString, CommandTimeout, SplitOn, encoding);
         }
 
         /// <summary>
