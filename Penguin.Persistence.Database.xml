@@ -178,6 +178,15 @@
             <param name="parameters">The parameters to pass into the stored procedure</param>
             <returns>An IEnumerable of object representing the first value of each row </returns>
         </member>
+        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteToList``1(System.String,``0,System.String[])">
+            <summary>
+            Executes a query to a List
+            </summary>
+            <param name="query">The name of the procedure to execute</param>
+            <param name="args">The parameters to pass into the stored procedure</param>
+            /// <param name="parameters">The parameters to pass into the stored procedure</param>
+            <returns>An IEnumerable of object representing the first value of each row </returns>
+        </member>
         <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteToList``1(System.String,System.String[])">
             <summary>
             Executes a query to a List

@@ -12,6 +12,7 @@ using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -56,7 +57,7 @@ namespace Penguin.Persistence.Database.Objects
         }
 
 
-        internal static void BackupOrTransfer(string ConnectionString, Action<Server, Transfer> toRun) 
+        internal static void BackupOrTransfer(string ConnectionString, Action<Server, Transfer> toRun)
         {
             ConnectionString connection = new ConnectionString(ConnectionString);
 
@@ -66,8 +67,8 @@ namespace Penguin.Persistence.Database.Objects
                 ServerInstance = connection.DataSource,
                 StatementTimeout = 0,
                 LockTimeout = 0,
-                
-               
+
+
             };
 
             if (string.IsNullOrWhiteSpace(connection.UserName))
@@ -107,9 +108,9 @@ namespace Penguin.Persistence.Database.Objects
             transfer.Options.BatchSize = 100;
 
             transfer.Options.ScriptBatchTerminator = true;
-            
+
             transfer.BulkCopyTimeout = 0;
-            
+
             transfer.Options.ScriptData = true;
             transfer.Options.DriAll = true;
             transfer.Options.ClusteredIndexes = true;
@@ -155,16 +156,17 @@ namespace Penguin.Persistence.Database.Objects
                     transfer.Options.ToFileOnly = true;
                     transfer.Options.FileName = FileName;
                 });
-            } catch(Exception)
+            }
+            catch (Exception)
             {
-                if(System.IO.File.Exists(FileName))
+                if (System.IO.File.Exists(FileName))
                 {
                     System.IO.File.Delete(FileName);
                 }
 
                 throw;
             }
-            
+
 
             if (Compress)
             {
@@ -362,6 +364,83 @@ namespace Penguin.Persistence.Database.Objects
             {
                 yield return o.ToString().Convert<T>();
             }
+        }
+
+        /// <summary>
+        /// Executes a query to a List
+        /// </summary>
+        /// <param name="query">The name of the procedure to execute</param>
+        /// <param name="args">The parameters to pass into the stored procedure</param>
+        /// /// <param name="parameters">The parameters to pass into the stored procedure</param>
+        /// <returns>An IEnumerable of object representing the first value of each row </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        public IEnumerable<T> ExecuteToList<T>(string query, T Dummy, params string[] args) where T : class
+        {
+            Dictionary<string, PropertyInfo> cachedProps = typeof(T).GetProperties().ToDictionary(k => k.Name, v => v, StringComparer.OrdinalIgnoreCase);
+
+            ConstructorInfo chosenConstructor = null;
+
+            List<ConstructorInfo> constructors = typeof(T).GetConstructors().ToList();
+
+            foreach (ConstructorInfo c in constructors.OrderByDescending(c => c.GetParameters().Length))
+            {
+                bool picked = true;
+
+                foreach (ParameterInfo pi in c.GetParameters())
+                {
+                    if (!cachedProps.TryGetValue(pi.Name, out PropertyInfo _))
+                    {
+                        picked = false;
+                    }
+
+                }
+
+                if (picked)
+                {
+                    chosenConstructor = c;
+                    break;
+                }
+            }
+
+
+            foreach (DataRow dataRow in this.ExecuteToTable(query).Rows)
+            {
+
+                Dictionary<string, object> newObjDict = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (DataColumn dc in dataRow.Table.Columns)
+                {
+                    if (cachedProps.TryGetValue(dc.ColumnName, out PropertyInfo pi))
+                    {
+                        newObjDict.Add(dc.ColumnName, dataRow[dc]);
+                    }
+
+
+                }
+
+                List<object> parameters = new List<object>();
+
+                foreach (ParameterInfo pi in chosenConstructor.GetParameters())
+                {
+                    parameters.Add(newObjDict[pi.Name]);
+                    newObjDict.Remove(pi.Name);
+                }
+
+                T toReturn = Activator.CreateInstance(typeof(T), parameters.ToArray()) as T;
+
+                foreach (PropertyInfo pi in cachedProps.Select(v => v.Value))
+                {
+                    if (newObjDict.TryGetValue(pi.Name, out object val))
+                    {
+                        pi.SetValue(toReturn, val);
+                    }
+                }
+
+                yield return toReturn;
+
+            }
+
+
         }
 
         /// <summary>
