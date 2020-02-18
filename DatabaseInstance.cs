@@ -170,7 +170,7 @@ namespace Penguin.Persistence.Database.Objects
 
             if (Compress)
             {
-                Zip(FileName);
+                Penguin.Persistence.Database.Helpers.ScriptHelpers.CompressScript(FileName);
             }
 
             Console.WriteLine($"Backup completed.");

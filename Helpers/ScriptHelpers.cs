@@ -135,7 +135,10 @@ namespace Penguin.Persistence.Database.Helpers
         internal static async Task RunSplitScript(Stream stream, string ConnectionString, int TimeOut = 0, string SplitOn = DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = 4096)
         {
             DateTime start = DateTime.Now;
+
             Exception toThrow = null;
+
+            bool readPos = true;
 
             encoding = encoding ?? Encoding.Default;
 
@@ -196,7 +199,15 @@ namespace Penguin.Persistence.Database.Helpers
 
                 using (StreamReader reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks, bufferSize, false))
                 {
-                    decimal streamLength = reader.BaseStream.Length;
+                    long streamLength = 0;
+
+                    try
+                    {
+                        streamLength = reader.BaseStream.Length;
+                    } catch(Exception ex)
+                    {
+                        readPos = false;
+                    }
                     // Open the connection and execute the reader.
 
                     int BufferLength = SplitOn.Length;
@@ -238,7 +249,14 @@ namespace Penguin.Persistence.Database.Helpers
 
                         if (breakScript)
                         {
-                            AsyncSqlCommand icmd = new AsyncSqlCommand(currentCommand.ToString(), ((reader.BaseStream.Position / streamLength) * 100), ++commandNumber);
+                            long pos = long.MaxValue;
+                            long progress = 0;
+                            if(readPos)
+                            {
+                                pos = reader.BaseStream.Position;
+                                progress = pos / streamLength * 100;
+                            }
+                            AsyncSqlCommand icmd = new AsyncSqlCommand(currentCommand.ToString(), progress, ++commandNumber);
 
                             while (Commands.Count > 5)
                             {
@@ -335,7 +353,7 @@ namespace Penguin.Persistence.Database.Helpers
 
             if (Path.GetExtension(FilePath).Trim('.').Equals("zql", StringComparison.OrdinalIgnoreCase))
             {
-                GZipStream gz = GetDecompressStream(FilePath);
+                s = GetDecompressStream(FilePath);
             }
             else
             {
