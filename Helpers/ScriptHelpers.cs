@@ -15,12 +15,12 @@ using System.Threading.Tasks;
 
 namespace Penguin.Persistence.Database.Helpers
 {
-    internal static class ScriptHelpers
+    public static class ScriptHelpers
     {
         private const long BUFFER_SIZE = 26214400;
         public const string DEFAULT_SPLIT = "\r\nGO\r\n";
 
-        private static void Decompress(string FilePath, string OutputFile = null)
+        public static void Decompress(string FilePath, string OutputFile = null)
         {
             OutputFile = OutputFile ?? $"{new FileInfo(FilePath).Directory.FullName}\\{Path.GetFileNameWithoutExtension(FilePath)}.sql";
 
@@ -42,7 +42,7 @@ namespace Penguin.Persistence.Database.Helpers
 
         }
 
-        private static IEnumerable<Byte[]> ReadCompressedFile(string FilePath)
+        public static IEnumerable<Byte[]> ReadCompressedFile(string FilePath)
         {
             using (GZipStream compressionStream = GetDecompressStream(FilePath))
             {
@@ -132,7 +132,7 @@ namespace Penguin.Persistence.Database.Helpers
             }
             File.Delete(ToutputFile);
         }
-        public static async Task RunSplitScript(Stream stream, string ConnectionString, int TimeOut = 0, string SplitOn = DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = 4096)
+        internal static async Task RunSplitScript(Stream stream, string ConnectionString, int TimeOut = 0, string SplitOn = DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = 4096)
         {
             DateTime start = DateTime.Now;
             Exception toThrow = null;
@@ -319,7 +319,7 @@ namespace Penguin.Persistence.Database.Helpers
             await SqlProcessResult;
         }
 
-        public static async Task RunSplitScript(string FilePath, string ConnectionString, int TimeOut = 0, string SplitOn = DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = 4096)
+        internal static async Task RunSplitScript(string FilePath, string ConnectionString, int TimeOut = 0, string SplitOn = DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = 4096)
         {
             Stream s = null;
 
