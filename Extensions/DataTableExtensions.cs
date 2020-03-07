@@ -15,7 +15,7 @@ namespace Penguin.Persistence.Database.Extensions
     public static class DataTableExtensions
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
-        private const string TooManyResultsMessage = "Called Single on a data table with more than one result";
+        private const string TOO_MANY_RESULTS_MESSAGE = "Called Single on a data table with more than one result";
 
         /// <summary>
         /// Returns a typed list representing all values in a given column of the data table
@@ -60,7 +60,7 @@ namespace Penguin.Persistence.Database.Extensions
             Contract.Requires(dt != null);
 
             if (dt.Rows.Count > 1 || dt.Columns.Count > 1)
-            { throw new Exception(TooManyResultsMessage); }
+            { throw new Exception(TOO_MANY_RESULTS_MESSAGE); }
 
             return dt.Rows[0][0].ToString().Convert<T>(IgnoreCase);
         }
@@ -98,13 +98,7 @@ namespace Penguin.Persistence.Database.Extensions
 
                 if (display)
                 {
-                    int order = 0;
                     int index = 0;
-
-                    if (displayAttribute != null)
-                    {
-                        order = displayAttribute.Order;
-                    }
 
                     while (index < Properties.Count && PropertyOrder[Properties.ElementAt(index)] > index)
                     {
@@ -117,8 +111,8 @@ namespace Penguin.Persistence.Database.Extensions
 
             foreach (PropertyInfo thisProperty in Properties)
             {
-                string DisplayName = string.Empty;
                 DisplayNameAttribute displayNameAttribute = thisProperty.GetCustomAttribute<DisplayNameAttribute>();
+                string DisplayName;
                 if (displayNameAttribute != null)
                 {
                     DisplayName = displayNameAttribute.DisplayName;

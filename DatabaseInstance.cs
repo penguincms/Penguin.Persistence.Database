@@ -23,6 +23,8 @@ namespace Penguin.Persistence.Database.Objects
     /// </summary>
     public class DatabaseInstance
     {
+        private const string MULTIPLE_ROWS_MESSAGE = "Multiple rows returned for Query";
+
         /// <summary>
         /// A global command timeout in seconds
         /// </summary>
@@ -32,8 +34,6 @@ namespace Penguin.Persistence.Database.Objects
         /// The connection string used when constructing this object
         /// </summary>
         public string ConnectionString { get; internal set; }
-
-        private const string MultipleRowsMessage = "Multiple rows returned for Query";
 
         /// <summary>
         /// Creates a new DatabaseInstance using the provided connection string
@@ -48,92 +48,11 @@ namespace Penguin.Persistence.Database.Objects
 
         public DatabaseInstance(string server, string database, int commandTimeout = 300) : this($"Server={server};Database={database};Trusted_Connection=True;", commandTimeout)
         {
-
         }
 
         public DatabaseInstance(string server, string database, string username, string password, int commandTimeout = 300) : this($"Server={server};Database={database};User Id={username};Password={password};", commandTimeout)
         {
-
         }
-
-
-        internal static void BackupOrTransfer(string ConnectionString, Action<Server, Transfer> toRun)
-        {
-            ConnectionString connection = new ConnectionString(ConnectionString);
-
-            ServerConnection serverConnection = new ServerConnection
-            {
-                LoginSecure = false,
-                ServerInstance = connection.DataSource,
-                StatementTimeout = 0,
-                LockTimeout = 0,
-
-
-            };
-
-            if (string.IsNullOrWhiteSpace(connection.UserName))
-            {
-                serverConnection.Authentication = SqlConnectionInfo.AuthenticationMethod.ActiveDirectoryIntegrated;
-                serverConnection.TrustServerCertificate = true;
-            }
-            else
-            {
-                serverConnection.Login = connection.UserName;
-                serverConnection.Password = connection.Password;
-            }
-
-            serverConnection.DatabaseName = connection.Database;
-
-            Server smoServer = new Server(serverConnection);
-
-            smoServer.ConnectionContext.LockTimeout = 0;
-            smoServer.ConnectionContext.StatementTimeout = 0;
-
-            if (smoServer.Version is null)
-            {
-                throw new Exception("Can't find the instance $Datasource");
-            }
-
-            Microsoft.SqlServer.Management.Smo.Database db = smoServer.Databases[serverConnection.DatabaseName];
-
-            if (db is null)
-            {
-                throw new Exception("Can't find the database '$Database' in $Datasource");
-            }
-
-            Transfer transfer = new Transfer(db);
-
-            toRun.Invoke(smoServer, transfer);
-
-            transfer.Options.BatchSize = 100;
-
-            transfer.Options.ScriptBatchTerminator = true;
-
-            transfer.BulkCopyTimeout = 0;
-
-            transfer.Options.ScriptData = true;
-            transfer.Options.DriAll = true;
-            transfer.Options.ClusteredIndexes = true;
-            transfer.Options.FullTextCatalogs = true;
-            transfer.Options.FullTextIndexes = true;
-            transfer.Options.FullTextStopLists = true;
-            transfer.Options.Indexes = true;
-            transfer.Options.Triggers = true;
-
-            transfer.DataTransferEvent += (sender, e) =>
-            {
-                try
-                {
-                    Console.WriteLine($"{e.DataTransferEventType}: {e.Message}");
-                }
-                catch (Exception) { }
-            };
-
-            Console.WriteLine($"Starting Transfer of {connection.DataSource}\\{connection.Database}...");
-            transfer.EnumScriptTransfer();
-            Console.WriteLine($"Transfer completed.");
-        }
-        public void Backup(string FileName, bool Compress = false) => Backup(this.ConnectionString, FileName, Compress);
 
         /// <summary>
         /// Backs up an entire database schema to a file, including data
@@ -142,15 +61,12 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="FileName">The file to output the data to</param>
         public static void Backup(string ConnectionString, string FileName, bool Compress = false)
         {
-
             ConnectionString connection = new ConnectionString(ConnectionString);
 
             Console.WriteLine($"Starting backup of {connection.DataSource}\\{connection.Database}...");
 
             try
             {
-
-
                 BackupOrTransfer(ConnectionString, (smoServer, transfer) =>
                 {
                     transfer.Options.ToFileOnly = true;
@@ -167,66 +83,10 @@ namespace Penguin.Persistence.Database.Objects
                 throw;
             }
 
-
             if (Compress)
             {
                 Penguin.Persistence.Database.Helpers.ScriptHelpers.CompressScript(FileName);
             }
-
-            Console.WriteLine($"Backup completed.");
-        }
-
-        public static void Zip(string FileName, bool Delete = true)
-        {
-            string zipName = FileName + ".zip";
-
-            if (System.IO.File.Exists(zipName))
-            {
-                System.IO.File.Delete(zipName);
-            }
-
-            using (ZipArchive zip = ZipFile.Open(zipName, ZipArchiveMode.Create))
-            {
-                zip.CreateEntryFromFile(FileName, new System.IO.FileInfo(FileName).Name, CompressionLevel.Optimal);
-            }
-
-            if (Delete)
-            {
-                System.IO.File.Delete(FileName);
-            }
-        }
-
-        /// <summary>
-        /// Transfers a database from one server to another
-        /// </summary>
-        /// <param name="ConnectionString">The database connection string</param>
-        /// <param name="FileName">The file to output the data to</param>
-        public static void Transfer(string SourceConnectionString, string DestinationConnection)
-        {
-            ConnectionString sourceConnection = new ConnectionString(SourceConnectionString);
-            ConnectionString destConnection = new ConnectionString(DestinationConnection);
-
-            Console.WriteLine($"Starting backup of {sourceConnection.DataSource}\\{sourceConnection.Database}...");
-
-
-            BackupOrTransfer(SourceConnectionString, (smoServer, transfer) =>
-            {
-                transfer.DestinationDatabase = destConnection.Database;
-                transfer.DestinationServer = destConnection.DataSource;
-
-                if (string.IsNullOrWhiteSpace(destConnection.UserName))
-                {
-                    //?
-                }
-                else
-                {
-                    transfer.DestinationLogin = destConnection.UserName;
-                    transfer.DestinationPassword = destConnection.Password;
-                    transfer.DestinationLoginSecure = false;
-                }
-
-            });
-
 
             Console.WriteLine($"Backup completed.");
         }
@@ -262,6 +122,103 @@ namespace Penguin.Persistence.Database.Objects
 
             SqlParameter param = new SqlParameter("", Activator.CreateInstance(type));
             return param.SqlDbType;
+        }
+
+        /// <summary>
+        /// Truncates the database and runs the SQL file at the provided path against the current database
+        /// </summary>
+        /// <param name="FileName">The file name to run</param>
+        /// <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
+        public static async Task Restore(string FileName, string ConnectionString, int CommandTimeout = 300, string SplitOn = ScriptHelpers.DEFAULT_SPLIT, Encoding encoding = null)
+        {
+            encoding = encoding ?? Encoding.Default;
+
+            TruncateDatabase(ConnectionString);
+            await ScriptHelpers.RunSplitScript(FileName, ConnectionString, CommandTimeout, SplitOn, encoding);
+        }
+
+        /// <summary>
+        /// Transfers a database from one server to another
+        /// </summary>
+        /// <param name="ConnectionString">The database connection string</param>
+        /// <param name="FileName">The file to output the data to</param>
+        public static void Transfer(string SourceConnectionString, string DestinationConnection)
+        {
+            ConnectionString sourceConnection = new ConnectionString(SourceConnectionString);
+            ConnectionString destConnection = new ConnectionString(DestinationConnection);
+
+            Console.WriteLine($"Starting backup of {sourceConnection.DataSource}\\{sourceConnection.Database}...");
+
+            BackupOrTransfer(SourceConnectionString, (smoServer, transfer) =>
+            {
+                transfer.DestinationDatabase = destConnection.Database;
+                transfer.DestinationServer = destConnection.DataSource;
+
+                if (string.IsNullOrWhiteSpace(destConnection.UserName))
+                {
+                    //?
+                }
+                else
+                {
+                    transfer.DestinationLogin = destConnection.UserName;
+                    transfer.DestinationPassword = destConnection.Password;
+                    transfer.DestinationLoginSecure = false;
+                }
+            });
+
+            Console.WriteLine($"Backup completed.");
+        }
+
+        /// <summary>
+        /// Drops all non-security information from the database
+        /// </summary>
+        public static void TruncateDatabase(string ConnectionString)
+        {
+            StaticLogger.Log("Truncating database...");
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+
+                // Create the command and set its properties.
+                using (SqlCommand command = new SqlCommand
+                {
+                    Connection = connection,
+                    CommandText = ResourceHelper.ReadEmbeddedScript("TruncateDatabase.sql"),
+                    CommandType = CommandType.Text,
+                    CommandTimeout = 600000
+                })
+                {
+                    // Open the connection and execute the reader.
+
+                    command.ExecuteNonQuery();
+                }
+            }
+            StaticLogger.Log("Truncating Complete.");
+        }
+
+        public static void Zip(string FileName, bool Delete = true)
+        {
+            string zipName = FileName + ".zip";
+
+            if (System.IO.File.Exists(zipName))
+            {
+                System.IO.File.Delete(zipName);
+            }
+
+            using (ZipArchive zip = ZipFile.Open(zipName, ZipArchiveMode.Create))
+            {
+                zip.CreateEntryFromFile(FileName, new System.IO.FileInfo(FileName).Name, CompressionLevel.Optimal);
+            }
+
+            if (Delete)
+            {
+                System.IO.File.Delete(FileName);
+            }
+        }
+
+        public void Backup(string FileName, bool Compress = false)
+        {
+            Backup(this.ConnectionString, FileName, Compress);
         }
 
         /// <summary>
@@ -363,113 +320,6 @@ namespace Penguin.Persistence.Database.Objects
             foreach (object o in this.ExecuteStoredProcedureToList(ProcedureName, parameters))
             {
                 yield return o.ToString().Convert<T>();
-            }
-        }
-
-        /// <summary>
-        /// Executes a query to a List
-        /// </summary>
-        /// <param name="query">The name of the procedure to execute</param>
-        /// <param name="args">The parameters to pass into the stored procedure</param>
-        /// /// <param name="parameters">The parameters to pass into the stored procedure</param>
-        /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
-        public IEnumerable<T> ExecuteToList<T>(string query, T Dummy, params string[] args) where T : class
-        {
-            Dictionary<string, PropertyInfo> cachedProps = typeof(T).GetProperties().ToDictionary(k => k.Name, v => v, StringComparer.OrdinalIgnoreCase);
-
-            ConstructorInfo chosenConstructor = null;
-
-            List<ConstructorInfo> constructors = typeof(T).GetConstructors().ToList();
-
-            foreach (ConstructorInfo c in constructors.OrderByDescending(c => c.GetParameters().Length))
-            {
-                bool picked = true;
-
-                foreach (ParameterInfo pi in c.GetParameters())
-                {
-                    if (!cachedProps.TryGetValue(pi.Name, out PropertyInfo _))
-                    {
-                        picked = false;
-                    }
-
-                }
-
-                if (picked)
-                {
-                    chosenConstructor = c;
-                    break;
-                }
-            }
-
-
-            foreach (DataRow dataRow in this.ExecuteToTable(query).Rows)
-            {
-
-                Dictionary<string, object> newObjDict = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-
-                foreach (DataColumn dc in dataRow.Table.Columns)
-                {
-                    if (cachedProps.TryGetValue(dc.ColumnName, out PropertyInfo pi))
-                    {
-                        newObjDict.Add(dc.ColumnName, dataRow[dc]);
-                    }
-
-
-                }
-
-                List<object> parameters = new List<object>();
-
-                foreach (ParameterInfo pi in chosenConstructor.GetParameters())
-                {
-                    parameters.Add(newObjDict[pi.Name]);
-                    newObjDict.Remove(pi.Name);
-                }
-
-                T toReturn = Activator.CreateInstance(typeof(T), parameters.ToArray()) as T;
-
-                foreach (PropertyInfo pi in cachedProps.Select(v => v.Value))
-                {
-                    if (newObjDict.TryGetValue(pi.Name, out object val))
-                    {
-                        pi.SetValue(toReturn, val);
-                    }
-                }
-
-                yield return toReturn;
-
-            }
-
-
-        }
-
-        /// <summary>
-        /// Executes a query to a List
-        /// </summary>
-        /// <param name="ProcedureName">The name of the procedure to execute</param>
-        /// <param name="parameters">The parameters to pass into the stored procedure</param>
-        /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
-        public IEnumerable<T> ExecuteToList<T>(string query, params string[] args)
-        {
-            foreach (object o in this.ExecuteToList(query, args))
-            {
-                yield return o.ToString().Convert<T>();
-            }
-        }
-
-        /// <summary>
-        /// Executes a query to a List
-        /// </summary>
-        /// <param name="ProcedureName">The name of the procedure to execute</param>
-        /// <param name="parameters">The parameters to pass into the stored procedure</param>
-        /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
-        public IEnumerable<object> ExecuteToList(string query, params string[] args)
-        {
-            foreach (DataRow dataRow in this.ExecuteToTable(query, args).Rows)
-            {
-                yield return dataRow[0];
             }
         }
 
@@ -603,7 +453,7 @@ namespace Penguin.Persistence.Database.Objects
 
                 if (dt.Rows.Count > 1)
                 {
-                    throw new Exception(MultipleRowsMessage);
+                    throw new Exception(MULTIPLE_ROWS_MESSAGE);
                 }
                 else if (dt.Rows.Count == 1)
                 {
@@ -615,6 +465,112 @@ namespace Penguin.Persistence.Database.Objects
                     }
                 }
                 return toReturn;
+            }
+        }
+
+        /// <summary>
+        /// Executes a query to a List
+        /// </summary>
+        /// <param name="query">The name of the procedure to execute</param>
+        /// <param name="args">The parameters to pass into the stored procedure</param>
+        /// /// <param name="parameters">The parameters to pass into the stored procedure</param>
+        /// <returns>An IEnumerable of object representing the first value of each row </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "<Pending>")]
+        public IEnumerable<T> ExecuteToList<T>(string query, T Dummy) where T : class
+        {
+            Dictionary<string, PropertyInfo> cachedProps = typeof(T).GetProperties().ToDictionary(k => k.Name, v => v, StringComparer.OrdinalIgnoreCase);
+
+            ConstructorInfo chosenConstructor = null;
+
+            List<ConstructorInfo> constructors = typeof(T).GetConstructors().ToList();
+
+            foreach (ConstructorInfo c in constructors.OrderByDescending(c => c.GetParameters().Length))
+            {
+                bool picked = true;
+
+                foreach (ParameterInfo pi in c.GetParameters())
+                {
+                    if (!cachedProps.TryGetValue(pi.Name, out PropertyInfo _))
+                    {
+                        picked = false;
+                    }
+                }
+
+                if (picked)
+                {
+                    chosenConstructor = c;
+                    break;
+                }
+            }
+
+            using (DataTable dt = this.ExecuteToTable(query))
+            {
+                foreach (DataRow dataRow in dt.Rows)
+                {
+                    Dictionary<string, object> newObjDict = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
+                    foreach (DataColumn dc in dataRow.Table.Columns)
+                    {
+                        if (cachedProps.TryGetValue(dc.ColumnName, out PropertyInfo pi))
+                        {
+                            newObjDict.Add(dc.ColumnName, dataRow[dc]);
+                        }
+                    }
+
+                    List<object> parameters = new List<object>();
+
+                    foreach (ParameterInfo pi in chosenConstructor.GetParameters())
+                    {
+                        parameters.Add(newObjDict[pi.Name]);
+                        newObjDict.Remove(pi.Name);
+                    }
+
+                    T toReturn = Activator.CreateInstance(typeof(T), parameters.ToArray()) as T;
+
+                    foreach (PropertyInfo pi in cachedProps.Select(v => v.Value))
+                    {
+                        if (newObjDict.TryGetValue(pi.Name, out object val))
+                        {
+                            pi.SetValue(toReturn, val);
+                        }
+                    }
+
+                    yield return toReturn;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Executes a query to a List
+        /// </summary>
+        /// <param name="ProcedureName">The name of the procedure to execute</param>
+        /// <param name="parameters">The parameters to pass into the stored procedure</param>
+        /// <returns>An IEnumerable of object representing the first value of each row </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        public IEnumerable<T> ExecuteToList<T>(string query, params string[] args)
+        {
+            foreach (object o in this.ExecuteToList(query, args))
+            {
+                yield return o.ToString().Convert<T>();
+            }
+        }
+
+        /// <summary>
+        /// Executes a query to a List
+        /// </summary>
+        /// <param name="ProcedureName">The name of the procedure to execute</param>
+        /// <param name="parameters">The parameters to pass into the stored procedure</param>
+        /// <returns>An IEnumerable of object representing the first value of each row </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        public IEnumerable<object> ExecuteToList(string query, params string[] args)
+        {
+            using (DataTable dt = this.ExecuteToTable(query, args))
+            {
+                foreach (DataRow dataRow in dt.Rows)
+                {
+                    yield return dataRow[0];
+                }
             }
         }
 
@@ -845,19 +801,9 @@ namespace Penguin.Persistence.Database.Objects
         /// </summary>
         /// <param name="FileName">The file name to run</param>
         /// <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
-        public async Task Restore(string FileName, string SplitOn = ScriptHelpers.DEFAULT_SPLIT, Encoding encoding = null) => Restore(FileName, this.ConnectionString, this.CommandTimeout, SplitOn, encoding ?? Encoding.Default);
-
-        /// <summary>
-        /// Truncates the database and runs the SQL file at the provided path against the current database
-        /// </summary>
-        /// <param name="FileName">The file name to run</param>
-        /// <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
-        public static async Task Restore(string FileName, string ConnectionString, int CommandTimeout = 300, string SplitOn = ScriptHelpers.DEFAULT_SPLIT, Encoding encoding = null)
+        public async Task Restore(string FileName, string SplitOn = ScriptHelpers.DEFAULT_SPLIT, Encoding encoding = null)
         {
-            encoding = encoding ?? Encoding.Default;
-
-            TruncateDatabase(ConnectionString);
-            await ScriptHelpers.RunSplitScript(FileName, ConnectionString, CommandTimeout, SplitOn, encoding);
+            await Restore(FileName, this.ConnectionString, this.CommandTimeout, SplitOn, encoding ?? Encoding.Default);
         }
 
         /// <summary>
@@ -873,31 +819,79 @@ namespace Penguin.Persistence.Database.Objects
             }
         }
 
-        /// <summary>
-        /// Drops all non-security information from the database
-        /// </summary>
-        public static void TruncateDatabase(string ConnectionString)
+        internal static void BackupOrTransfer(string ConnectionString, Action<Server, Transfer> toRun)
         {
-            StaticLogger.Log("Truncating database...");
-            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            ConnectionString connection = new ConnectionString(ConnectionString);
+
+            ServerConnection serverConnection = new ServerConnection
             {
-                connection.Open();
+                LoginSecure = false,
+                ServerInstance = connection.DataSource,
+                StatementTimeout = 0,
+                LockTimeout = 0,
+            };
 
-                // Create the command and set its properties.
-                using (SqlCommand command = new SqlCommand
-                {
-                    Connection = connection,
-                    CommandText = ResourceHelper.ReadEmbeddedScript("TruncateDatabase.sql"),
-                    CommandType = CommandType.Text,
-                    CommandTimeout = 600000
-                })
-                {
-                    // Open the connection and execute the reader.
-
-                    command.ExecuteNonQuery();
-                }
+            if (string.IsNullOrWhiteSpace(connection.UserName))
+            {
+                serverConnection.Authentication = SqlConnectionInfo.AuthenticationMethod.ActiveDirectoryIntegrated;
+                serverConnection.TrustServerCertificate = true;
             }
-            StaticLogger.Log("Truncating Complete.");
+            else
+            {
+                serverConnection.Login = connection.UserName;
+                serverConnection.Password = connection.Password;
+            }
+
+            serverConnection.DatabaseName = connection.Database;
+
+            Server smoServer = new Server(serverConnection);
+
+            smoServer.ConnectionContext.LockTimeout = 0;
+            smoServer.ConnectionContext.StatementTimeout = 0;
+
+            if (smoServer.Version is null)
+            {
+                throw new Exception("Can't find the instance $Datasource");
+            }
+
+            Microsoft.SqlServer.Management.Smo.Database db = smoServer.Databases[serverConnection.DatabaseName];
+
+            if (db is null)
+            {
+                throw new Exception("Can't find the database '$Database' in $Datasource");
+            }
+
+            Transfer transfer = new Transfer(db);
+
+            toRun.Invoke(smoServer, transfer);
+
+            transfer.Options.BatchSize = 100;
+
+            transfer.Options.ScriptBatchTerminator = true;
+
+            transfer.BulkCopyTimeout = 0;
+
+            transfer.Options.ScriptData = true;
+            transfer.Options.DriAll = true;
+            transfer.Options.ClusteredIndexes = true;
+            transfer.Options.FullTextCatalogs = true;
+            transfer.Options.FullTextIndexes = true;
+            transfer.Options.FullTextStopLists = true;
+            transfer.Options.Indexes = true;
+            transfer.Options.Triggers = true;
+
+            transfer.DataTransferEvent += (sender, e) =>
+            {
+                try
+                {
+                    Console.WriteLine($"{e.DataTransferEventType}: {e.Message}");
+                }
+                catch (Exception) { }
+            };
+
+            Console.WriteLine($"Starting Transfer of {connection.DataSource}\\{connection.Database}...");
+            transfer.EnumScriptTransfer();
+            Console.WriteLine($"Transfer completed.");
         }
 
         private static string GetStringForType(Type type)

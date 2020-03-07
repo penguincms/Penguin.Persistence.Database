@@ -13,6 +13,38 @@ namespace Penguin.Persistence.Database
     /// </summary>
     public class ConnectionString
     {
+        private static readonly string[] databaseAliases = { "database", "initial catalog" };
+
+        private static readonly string[] passwordAliases = { "password", "pwd" };
+
+        private static readonly string[] serverAliases = { "server", "host", "data source", "datasource", "address", "addr", "network address" };
+
+        private static readonly string[] usernameAliases = { "user id", "uid", "username", "user name", "user" };
+
+        /// <summary>
+        /// The database name for the connection string
+        /// </summary>
+        public string Database => this.GetAliasedValue(databaseAliases);
+
+        /// <summary>
+        /// The data source (or server) name for the connection string
+        /// </summary>
+        public string DataSource => this.GetAliasedValue(serverAliases);
+
+        /// <summary>
+        /// The password used to access this data source
+        /// </summary>
+        public string Password => this.GetAliasedValue(passwordAliases);
+
+        /// <summary>
+        /// The user name used to access this data source
+        /// </summary>
+        public string UserName => this.GetAliasedValue(usernameAliases);
+
+        private string connectionString { get; set; }
+
+        private Dictionary<string, string> ConnectionStringDictionary { get; set; }
+
         /// <summary>
         /// A class representing the result of an attempt to validate a connection string
         /// </summary>
@@ -37,26 +69,6 @@ namespace Penguin.Persistence.Database
                 this.Error = ex;
             }
         }
-
-        /// <summary>
-        /// The database name for the connection string
-        /// </summary>
-        public string Database => this.GetAliasedValue(databaseAliases);
-
-        /// <summary>
-        /// The data source (or server) name for the connection string
-        /// </summary>
-        public string DataSource => this.GetAliasedValue(serverAliases);
-
-        /// <summary>
-        /// The password used to access this data source
-        /// </summary>
-        public string Password => this.GetAliasedValue(passwordAliases);
-
-        /// <summary>
-        /// The user name used to access this data source
-        /// </summary>
-        public string UserName => this.GetAliasedValue(usernameAliases);
 
         /// <summary>
         /// Creates a new instance of this object using the provided connection string
@@ -133,13 +145,6 @@ namespace Penguin.Persistence.Database
         {
             return Test(this.connectionString);
         }
-
-        private string connectionString { get; set; }
-        private Dictionary<string, string> ConnectionStringDictionary { get; set; }
-        private static readonly string[] databaseAliases = { "database", "initial catalog" };
-        private static readonly string[] passwordAliases = { "password", "pwd" };
-        private static readonly string[] serverAliases = { "server", "host", "data source", "datasource", "address", "addr", "network address" };
-        private static readonly string[] usernameAliases = { "user id", "uid", "username", "user name", "user" };
 
         private string GetAliasedValue(string[] aliases)
         {

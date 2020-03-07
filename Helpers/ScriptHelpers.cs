@@ -17,85 +17,9 @@ namespace Penguin.Persistence.Database.Helpers
 {
     public static class ScriptHelpers
     {
-        private const long BUFFER_SIZE = 26214400;
         public const string DEFAULT_SPLIT = "\r\nGO\r\n";
+        private const long BUFFER_SIZE = 26214400;
 
-        public static void Decompress(string FilePath, string OutputFile = null)
-        {
-            OutputFile = OutputFile ?? $"{new FileInfo(FilePath).Directory.FullName}\\{Path.GetFileNameWithoutExtension(FilePath)}.sql";
-
-            using (FileStream fs = new FileStream(OutputFile, FileMode.Create, FileAccess.ReadWrite))
-            {
-                foreach (byte[] bytes in ReadCompressedFile(FilePath))
-                {
-                    fs.Write(bytes, 0, bytes.Length);
-                }
-            }
-
-            File.Delete(FilePath);
-        }
-
-        private static GZipStream GetDecompressStream(string FilePath)
-        {
-            FileStream inputFile = new FileStream(FilePath, FileMode.Open, FileAccess.ReadWrite);
-            return new GZipStream(inputFile, CompressionMode.Decompress);
-
-        }
-
-        public static IEnumerable<Byte[]> ReadCompressedFile(string FilePath)
-        {
-            using (GZipStream compressionStream = GetDecompressStream(FilePath))
-            {
-
-                    int read = 0;
-                    byte[] toReturn = new byte[BUFFER_SIZE];
-
-                    while ((read = compressionStream.Read(toReturn, 0, toReturn.Length)) != 0)
-                    {
-                        if (read == BUFFER_SIZE)
-                        {
-                            yield return toReturn;
-                        }
-                        else
-                        {
-                            byte[] ra = new byte[read];
-
-                            for (int i = 0; i < read; i++)
-                            {
-                                ra[i] = toReturn[i];
-                            }
-
-                            yield return ra;
-                        }
-                    }
-                }
-            }
-        
-
-        private static void StreamThrough(Stream source, Stream dest, Func<byte[], byte[]> toInvoke = null)
-        {
-            while (source.Length > 0)
-            {
-                Console.WriteLine(source.Length);
-
-                long thisBlock = Math.Min(source.Length, BUFFER_SIZE);
-
-                source.Seek(-1 * thisBlock, SeekOrigin.End);
-
-                byte[] buffer = new byte[thisBlock];
-
-                source.Read(buffer, 0, buffer.Length);
-
-                if (toInvoke != null)
-                {
-                    buffer = toInvoke(buffer);
-                }
-
-                dest.Write(buffer, 0, buffer.Length);
-
-                source.SetLength(source.Length - thisBlock);
-            }
-        }
         public static void CompressScript(string sqlPath, string outputPath = null)
         {
             string OutputFile = outputPath ?? $"{new FileInfo(sqlPath).Directory.FullName}\\{Path.GetFileNameWithoutExtension(sqlPath)}.zql";
@@ -123,7 +47,6 @@ namespace Penguin.Persistence.Database.Helpers
 
                 using (FileStream compressedFileStream = new FileStream(OutputFile, FileMode.CreateNew, FileAccess.ReadWrite))
                 {
-
                     using (GZipStream compressionStream = new GZipStream(compressedFileStream, CompressionLevel.Optimal))
                     {
                         StreamThrough(RFileStream, compressionStream, (b) => b.Reverse().ToArray());
@@ -132,6 +55,50 @@ namespace Penguin.Persistence.Database.Helpers
             }
             File.Delete(ToutputFile);
         }
+
+        public static void Decompress(string FilePath, string OutputFile = null)
+        {
+            OutputFile = OutputFile ?? $"{new FileInfo(FilePath).Directory.FullName}\\{Path.GetFileNameWithoutExtension(FilePath)}.sql";
+
+            using (FileStream fs = new FileStream(OutputFile, FileMode.Create, FileAccess.ReadWrite))
+            {
+                foreach (byte[] bytes in ReadCompressedFile(FilePath))
+                {
+                    fs.Write(bytes, 0, bytes.Length);
+                }
+            }
+
+            File.Delete(FilePath);
+        }
+
+        public static IEnumerable<byte[]> ReadCompressedFile(string FilePath)
+        {
+            using (GZipStream compressionStream = GetDecompressStream(FilePath))
+            {
+                int read = 0;
+                byte[] toReturn = new byte[BUFFER_SIZE];
+
+                while ((read = compressionStream.Read(toReturn, 0, toReturn.Length)) != 0)
+                {
+                    if (read == BUFFER_SIZE)
+                    {
+                        yield return toReturn;
+                    }
+                    else
+                    {
+                        byte[] ra = new byte[read];
+
+                        for (int i = 0; i < read; i++)
+                        {
+                            ra[i] = toReturn[i];
+                        }
+
+                        yield return ra;
+                    }
+                }
+            }
+        }
+
         internal static async Task RunSplitScript(Stream stream, string ConnectionString, int TimeOut = 0, string SplitOn = DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = 4096)
         {
             DateTime start = DateTime.Now;
@@ -164,7 +131,6 @@ namespace Penguin.Persistence.Database.Helpers
                                     StaticLogger.Log($"Executing Command {cmd.CommandNumber} - {Math.Round(cmd.Progress, 2)}%");
 
                                     server.ConnectionContext.ExecuteNonQuery(cmd.Text);
-
                                 }
                                 catch (Exception ex)
                                 {
@@ -195,8 +161,6 @@ namespace Penguin.Persistence.Database.Helpers
 
             BackgroundWorker FileReadWorker = BackgroundWorker.Create((worker) =>
             {
-
-
                 using (StreamReader reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks, bufferSize, false))
                 {
                     long streamLength = 0;
@@ -204,7 +168,8 @@ namespace Penguin.Persistence.Database.Helpers
                     try
                     {
                         streamLength = reader.BaseStream.Length;
-                    } catch(Exception ex)
+                    }
+                    catch (Exception)
                     {
                         readPos = false;
                     }
@@ -251,7 +216,7 @@ namespace Penguin.Persistence.Database.Helpers
                         {
                             long pos = long.MaxValue;
                             long progress = 0;
-                            if(readPos)
+                            if (readPos)
                             {
                                 pos = reader.BaseStream.Position;
                                 progress = pos / streamLength * 100;
@@ -300,9 +265,7 @@ namespace Penguin.Persistence.Database.Helpers
 
                     do
                     {
-
                         bufferPointer++;
-
 
                         if (bufferPointer == buffer.Length)
                         {
@@ -318,7 +281,6 @@ namespace Penguin.Persistence.Database.Helpers
                         }
 
                         currentCommand.Append(buffer[bufferPointer]);
-
                     } while (true);
 
                     AsyncSqlCommand lcmd = new AsyncSqlCommand(currentCommand.ToString(), ((reader.BaseStream.Position / streamLength) * 100), commandNumber);
@@ -326,7 +288,6 @@ namespace Penguin.Persistence.Database.Helpers
                     Commands.Enqueue(lcmd);
 
                     ReadComplete = true;
-
                 }
             });
 
@@ -339,8 +300,6 @@ namespace Penguin.Persistence.Database.Helpers
 
         internal static async Task RunSplitScript(string FilePath, string ConnectionString, int TimeOut = 0, string SplitOn = DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = 4096)
         {
-            Stream s = null;
-
             if (!File.Exists(FilePath))
             {
                 throw new Exception($"SQL File not found: {FilePath}");
@@ -351,6 +310,7 @@ namespace Penguin.Persistence.Database.Helpers
                 throw new Exception($"Stream length of 0 for file {FilePath}");
             }
 
+            Stream s;
             if (Path.GetExtension(FilePath).Trim('.').Equals("zql", StringComparison.OrdinalIgnoreCase))
             {
                 s = GetDecompressStream(FilePath);
@@ -363,6 +323,37 @@ namespace Penguin.Persistence.Database.Helpers
             await RunSplitScript(s, ConnectionString, TimeOut, SplitOn, encoding, detectEncodingFromByteOrderMarks, bufferSize);
 
             s?.Dispose();
+        }
+
+        private static GZipStream GetDecompressStream(string FilePath)
+        {
+            FileStream inputFile = new FileStream(FilePath, FileMode.Open, FileAccess.ReadWrite);
+            return new GZipStream(inputFile, CompressionMode.Decompress);
+        }
+
+        private static void StreamThrough(Stream source, Stream dest, Func<byte[], byte[]> toInvoke = null)
+        {
+            while (source.Length > 0)
+            {
+                Console.WriteLine(source.Length);
+
+                long thisBlock = Math.Min(source.Length, BUFFER_SIZE);
+
+                source.Seek(-1 * thisBlock, SeekOrigin.End);
+
+                byte[] buffer = new byte[thisBlock];
+
+                source.Read(buffer, 0, buffer.Length);
+
+                if (toInvoke != null)
+                {
+                    buffer = toInvoke(buffer);
+                }
+
+                dest.Write(buffer, 0, buffer.Length);
+
+                source.SetLength(source.Length - thisBlock);
+            }
         }
     }
 }

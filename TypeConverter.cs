@@ -9,6 +9,28 @@ namespace Penguin.Persistence.Database
     /// </summary>
     public sealed class TypeConverter
     {
+        private const string UnsupportedDbTypeMessage = "Referenced an unsupported DbType";
+
+        private const string UnsupportedSQLTypeMessage = "Referenced an unsupported SqlDbType";
+
+        private const string UnsupportedTypeMessage = "Referenced an unsupported Type";
+
+        private static readonly ArrayList _DbTypeList = new ArrayList();
+
+        private struct DbTypeMapEntry
+        {
+            public DbType DbType;
+            public SqlDbType SqlDbType;
+            public Type Type;
+
+            public DbTypeMapEntry(Type type, DbType dbType, SqlDbType sqlDbType)
+            {
+                this.Type = type;
+                this.DbType = dbType;
+                this.SqlDbType = sqlDbType;
+            }
+        };
+
         static TypeConverter()
         {
             DbTypeMapEntry dbTypeMapEntry
@@ -62,6 +84,10 @@ namespace Penguin.Persistence.Database
             dbTypeMapEntry
             = new DbTypeMapEntry(typeof(string), DbType.String, SqlDbType.VarChar);
             _DbTypeList.Add(dbTypeMapEntry);
+        }
+
+        private TypeConverter()
+        {
         }
 
         /// <summary>
@@ -128,29 +154,6 @@ namespace Penguin.Persistence.Database
         {
             DbTypeMapEntry entry = Find(dbType);
             return entry.SqlDbType;
-        }
-
-        private struct DbTypeMapEntry
-        {
-            public DbType DbType;
-            public SqlDbType SqlDbType;
-            public Type Type;
-
-            public DbTypeMapEntry(Type type, DbType dbType, SqlDbType sqlDbType)
-            {
-                this.Type = type;
-                this.DbType = dbType;
-                this.SqlDbType = sqlDbType;
-            }
-        };
-
-        private const string UnsupportedTypeMessage = "Referenced an unsupported Type";
-        private const string UnsupportedSQLTypeMessage = "Referenced an unsupported SqlDbType";
-        private const string UnsupportedDbTypeMessage = "Referenced an unsupported DbType";
-        private static readonly ArrayList _DbTypeList = new ArrayList();
-
-        private TypeConverter()
-        {
         }
 
         private static DbTypeMapEntry Find(Type type)

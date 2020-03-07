@@ -15,6 +15,8 @@ namespace Penguin.Persistence.Database
     /// </summary>
     public class StoredProcedure
     {
+        private const string LAST_PARAMETER_DELIMETER = @"([\s\r\n]+|^)as[\s\r\n]+(begin|set)[\s\r\n]+";
+
         /// <summary>
         /// The body of the script
         /// </summary>
@@ -133,8 +135,6 @@ namespace Penguin.Persistence.Database
             this.Name = parsedNewName;
         }
 
-        private const string LAST_PARAMETER_DELIMETER = @"([\s\r\n]+|^)as[\s\r\n]+(begin|set)[\s\r\n]+";
-
         private string RemoveComments(string intext)
         {
             string[] lines = intext.Split('\n').Select(s => s.Trim()).ToArray();
@@ -142,7 +142,7 @@ namespace Penguin.Persistence.Database
             bool inQuote = false;
             bool inComment = false;
 
-            for (int i = 0; i < lines.Count(); i++)
+            for (int i = 0; i < lines.Length; i++)
             {
                 string newLine = string.Empty;
 
