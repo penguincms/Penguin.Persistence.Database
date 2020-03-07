@@ -15,7 +15,7 @@
     <None Remove="Scripts\TruncateDatabase.sql" />
     <PackageReference Include="Penguin.Debugging" Version="2.0.2-T9RVMZA" />
     <PackageReference Include="Penguin.Threading.BackgroundWorker" Version="1.0.5-T9RVMZA" />
-    <PackageReference Include="Penguin.Persistence.Abstractions" Version="3.0.2-T9SAD4U" />
+    <PackageReference Include="Penguin.Persistence.Abstractions" Version="3.0.2-T9SPWN8" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Generate\StoredProcedures\Tools\_GetAllProcedures.sql" />
