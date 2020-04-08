@@ -9,21 +9,6 @@
             A class to convert a connection string into a solid object
             </summary>
         </member>
-        <member name="T:Penguin.Persistence.Database.ConnectionString.TestResult">
-            <summary>
-            A class representing the result of an attempt to validate a connection string
-            </summary>
-        </member>
-        <member name="P:Penguin.Persistence.Database.ConnectionString.TestResult.Error">
-            <summary>
-            Any error occured while attempting to validate
-            </summary>
-        </member>
-        <member name="P:Penguin.Persistence.Database.ConnectionString.TestResult.Success">
-            <summary>
-            Whether or not the connection attempt was successfull
-            </summary>
-        </member>
         <member name="P:Penguin.Persistence.Database.ConnectionString.Database">
             <summary>
             The database name for the connection string
@@ -42,6 +27,21 @@
         <member name="P:Penguin.Persistence.Database.ConnectionString.UserName">
             <summary>
             The user name used to access this data source
+            </summary>
+        </member>
+        <member name="T:Penguin.Persistence.Database.ConnectionString.TestResult">
+            <summary>
+            A class representing the result of an attempt to validate a connection string
+            </summary>
+        </member>
+        <member name="P:Penguin.Persistence.Database.ConnectionString.TestResult.Error">
+            <summary>
+            Any error occured while attempting to validate
+            </summary>
+        </member>
+        <member name="P:Penguin.Persistence.Database.ConnectionString.TestResult.Success">
+            <summary>
+            Whether or not the connection attempt was successfull
             </summary>
         </member>
         <member name="M:Penguin.Persistence.Database.ConnectionString.#ctor(System.String)">
@@ -114,13 +114,6 @@
             <param name="ConnectionString">The database connection string</param>
             <param name="FileName">The file to output the data to</param>
         </member>
-        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.Transfer(System.String,System.String)">
-            <summary>
-            Transfers a database from one server to another
-            </summary>
-            <param name="ConnectionString">The database connection string</param>
-            <param name="FileName">The file to output the data to</param>
-        </member>
         <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.FormatProcedure(System.String)">
             <summary>
             Ensures that procedure names always contain once set of braces so SQL parses them correctly
@@ -133,6 +126,25 @@
             </summary>
             <param name="type">The .Net type to get a value for</param>
             <returns>The equivalent SqlDbType to the provided .net type</returns>
+        </member>
+        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.Restore(System.String,System.String,System.Int32,System.String,System.Text.Encoding)">
+            <summary>
+            Truncates the database and runs the SQL file at the provided path against the current database
+            </summary>
+            <param name="FileName">The file name to run</param>
+            <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
+        </member>
+        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.Transfer(System.String,System.String)">
+            <summary>
+            Transfers a database from one server to another
+            </summary>
+            <param name="ConnectionString">The database connection string</param>
+            <param name="FileName">The file to output the data to</param>
+        </member>
+        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.TruncateDatabase(System.String)">
+            <summary>
+            Drops all non-security information from the database
+            </summary>
         </member>
         <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.DropProcedure(System.String)">
             <summary>
@@ -173,31 +185,6 @@
         <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteStoredProcedureToList``1(System.String,System.String[])">
             <summary>
             Executes a stored procedure to a List
-            </summary>
-            <param name="ProcedureName">The name of the procedure to execute</param>
-            <param name="parameters">The parameters to pass into the stored procedure</param>
-            <returns>An IEnumerable of object representing the first value of each row </returns>
-        </member>
-        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteToList``1(System.String,``0,System.String[])">
-            <summary>
-            Executes a query to a List
-            </summary>
-            <param name="query">The name of the procedure to execute</param>
-            <param name="args">The parameters to pass into the stored procedure</param>
-            /// <param name="parameters">The parameters to pass into the stored procedure</param>
-            <returns>An IEnumerable of object representing the first value of each row </returns>
-        </member>
-        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteToList``1(System.String,System.String[])">
-            <summary>
-            Executes a query to a List
-            </summary>
-            <param name="ProcedureName">The name of the procedure to execute</param>
-            <param name="parameters">The parameters to pass into the stored procedure</param>
-            <returns>An IEnumerable of object representing the first value of each row </returns>
-        </member>
-        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteToList(System.String,System.String[])">
-            <summary>
-            Executes a query to a List
             </summary>
             <param name="ProcedureName">The name of the procedure to execute</param>
             <param name="parameters">The parameters to pass into the stored procedure</param>
@@ -250,6 +237,31 @@
             <param name="Query">The query text to execute</param>
             <param name="args">The ordered values of any "@i" formatted parameters to replace in the query</param>
             <returns>A dictionary representing the result of the query</returns>
+        </member>
+        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteToList``1(System.String,``0)">
+            <summary>
+            Executes a query to a List
+            </summary>
+            <param name="query">The name of the procedure to execute</param>
+            <param name="args">The parameters to pass into the stored procedure</param>
+            /// <param name="parameters">The parameters to pass into the stored procedure</param>
+            <returns>An IEnumerable of object representing the first value of each row </returns>
+        </member>
+        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteToList``1(System.String,System.String[])">
+            <summary>
+            Executes a query to a List
+            </summary>
+            <param name="ProcedureName">The name of the procedure to execute</param>
+            <param name="parameters">The parameters to pass into the stored procedure</param>
+            <returns>An IEnumerable of object representing the first value of each row </returns>
+        </member>
+        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteToList(System.String,System.String[])">
+            <summary>
+            Executes a query to a List
+            </summary>
+            <param name="ProcedureName">The name of the procedure to execute</param>
+            <param name="parameters">The parameters to pass into the stored procedure</param>
+            <returns>An IEnumerable of object representing the first value of each row </returns>
         </member>
         <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteToTable(System.String,System.Object[])">
             <summary>
@@ -320,24 +332,12 @@
             <param name="FileName">The file name to run</param>
             <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
         </member>
-        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.Restore(System.String,System.String,System.Int32,System.String,System.Text.Encoding)">
-            <summary>
-            Truncates the database and runs the SQL file at the provided path against the current database
-            </summary>
-            <param name="FileName">The file name to run</param>
-            <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
-        </member>
         <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.TableCount(System.String)">
             <summary>
             Returns a count of the rows in the given table
             </summary>
             <param name="TableName">The table containing the rows to enumerate</param>
             <returns>A count of the table rows</returns>
-        </member>
-        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.TruncateDatabase(System.String)">
-            <summary>
-            Drops all non-security information from the database
-            </summary>
         </member>
         <member name="M:Penguin.Persistence.Database.Extensions.DataTableExtensions.All``1(System.Data.DataTable,System.String)">
             <summary>
