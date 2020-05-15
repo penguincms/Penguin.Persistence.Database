@@ -140,8 +140,6 @@ namespace Penguin.Persistence.Database.Objects
         /// <summary>
         /// Transfers a database from one server to another
         /// </summary>
-        /// <param name="ConnectionString">The database connection string</param>
-        /// <param name="FileName">The file to output the data to</param>
         public static void Transfer(string SourceConnectionString, string DestinationConnection)
         {
             ConnectionString sourceConnection = new ConnectionString(SourceConnectionString);
@@ -472,8 +470,6 @@ namespace Penguin.Persistence.Database.Objects
         /// Executes a query to a List
         /// </summary>
         /// <param name="query">The name of the procedure to execute</param>
-        /// <param name="args">The parameters to pass into the stored procedure</param>
-        /// /// <param name="parameters">The parameters to pass into the stored procedure</param>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "<Pending>")]
@@ -544,8 +540,6 @@ namespace Penguin.Persistence.Database.Objects
         /// <summary>
         /// Executes a query to a List
         /// </summary>
-        /// <param name="ProcedureName">The name of the procedure to execute</param>
-        /// <param name="parameters">The parameters to pass into the stored procedure</param>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
         public IEnumerable<T> ExecuteToList<T>(string query, params string[] args)
@@ -559,8 +553,6 @@ namespace Penguin.Persistence.Database.Objects
         /// <summary>
         /// Executes a query to a List
         /// </summary>
-        /// <param name="ProcedureName">The name of the procedure to execute</param>
-        /// <param name="parameters">The parameters to pass into the stored procedure</param>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
         public IEnumerable<object> ExecuteToList(string query, params string[] args)

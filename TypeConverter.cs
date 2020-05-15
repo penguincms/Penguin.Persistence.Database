@@ -9,11 +9,11 @@ namespace Penguin.Persistence.Database
     /// </summary>
     public sealed class TypeConverter
     {
-        private const string UnsupportedDbTypeMessage = "Referenced an unsupported DbType";
+        private const string UNSUPPORTED_DB_TYPE_MESSAGE = "Referenced an unsupported DbType";
 
-        private const string UnsupportedSQLTypeMessage = "Referenced an unsupported SqlDbType";
+        private const string UNSUPPORTED_SQL_TYPE_MESSAGE = "Referenced an unsupported SqlDbType";
 
-        private const string UnsupportedTypeMessage = "Referenced an unsupported Type";
+        private const string UNSUPPORTED_TYPE_MESSAGE = "Referenced an unsupported Type";
 
         private static readonly ArrayList _DbTypeList = new ArrayList();
 
@@ -171,7 +171,7 @@ namespace Penguin.Persistence.Database
             if (retObj == null)
             {
                 throw
-                new ApplicationException(UnsupportedTypeMessage + $": {type.ToString()}");
+                new ApplicationException(UNSUPPORTED_TYPE_MESSAGE + $": {type}");
             }
 
             return (DbTypeMapEntry)retObj;
@@ -192,7 +192,7 @@ namespace Penguin.Persistence.Database
             if (retObj == null)
             {
                 throw
-                new ApplicationException(UnsupportedDbTypeMessage + $": {dbType.ToString()}");
+                new ApplicationException(UNSUPPORTED_DB_TYPE_MESSAGE + $": {dbType}");
             }
 
             return (DbTypeMapEntry)retObj;
@@ -213,7 +213,7 @@ namespace Penguin.Persistence.Database
             if (retObj == null)
             {
                 throw
-                new ApplicationException(UnsupportedSQLTypeMessage + $": {sqlDbType.ToString()}");
+                new ApplicationException(UNSUPPORTED_SQL_TYPE_MESSAGE + $": {sqlDbType}");
             }
 
             return (DbTypeMapEntry)retObj;

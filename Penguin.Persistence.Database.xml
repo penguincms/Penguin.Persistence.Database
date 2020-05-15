@@ -138,8 +138,6 @@
             <summary>
             Transfers a database from one server to another
             </summary>
-            <param name="ConnectionString">The database connection string</param>
-            <param name="FileName">The file to output the data to</param>
         </member>
         <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.TruncateDatabase(System.String)">
             <summary>
@@ -243,24 +241,18 @@
             Executes a query to a List
             </summary>
             <param name="query">The name of the procedure to execute</param>
-            <param name="args">The parameters to pass into the stored procedure</param>
-            /// <param name="parameters">The parameters to pass into the stored procedure</param>
             <returns>An IEnumerable of object representing the first value of each row </returns>
         </member>
         <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteToList``1(System.String,System.String[])">
             <summary>
             Executes a query to a List
             </summary>
-            <param name="ProcedureName">The name of the procedure to execute</param>
-            <param name="parameters">The parameters to pass into the stored procedure</param>
             <returns>An IEnumerable of object representing the first value of each row </returns>
         </member>
         <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteToList(System.String,System.String[])">
             <summary>
             Executes a query to a List
             </summary>
-            <param name="ProcedureName">The name of the procedure to execute</param>
-            <param name="parameters">The parameters to pass into the stored procedure</param>
             <returns>An IEnumerable of object representing the first value of each row </returns>
         </member>
         <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteToTable(System.String,System.Object[])">
