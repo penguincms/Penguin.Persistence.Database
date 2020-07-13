@@ -50,11 +50,14 @@ namespace Penguin.Persistence.Database
         /// <param name="Script">The creation script for the stored procedure</param>
         public StoredProcedure(string Script)
         {
-            Contract.Requires(!string.IsNullOrWhiteSpace(Script));
+            if (Script is null)
+            {
+                throw new ArgumentNullException(nameof(Script));
+            }
 
             this.ConnectionStrings = new List<string>();
 
-            this.Body = this.RemoveComments(Script).From("create procedure ", true, StringComparison.CurrentCultureIgnoreCase).ToLast("\nGO", false, StringComparison.CurrentCultureIgnoreCase).Trim();
+            this.Body = RemoveComments(Script).From("create procedure ", true, StringComparison.CurrentCultureIgnoreCase).ToLast("\nGO", false, StringComparison.CurrentCultureIgnoreCase).Trim();
 
             List<string> Commands = Script.Split('\n').Where(s => s.Trim().StartsWith("--@", StringComparison.OrdinalIgnoreCase)).Select(s => s.From("@")).ToList();
 
@@ -66,7 +69,7 @@ namespace Penguin.Persistence.Database
                 }
             }
 
-            Script = this.RemoveComments(Script);
+            Script = RemoveComments(Script);
 
             this.Name = Script.From("create procedure", false, StringComparison.CurrentCultureIgnoreCase).Trim().To(" ").To("\n").To("\r").Trim();
 
@@ -124,7 +127,10 @@ namespace Penguin.Persistence.Database
         /// <param name="newName">The new name to give the procedure</param>
         public void RenameProcedure(string newName)
         {
-            Contract.Requires(!string.IsNullOrWhiteSpace(newName));
+            if (newName is null)
+            {
+                throw new ArgumentNullException(nameof(newName));
+            }
 
             string parsedNewName = "[" + newName.Trim('[').Trim(']') + "]";
 
@@ -135,7 +141,7 @@ namespace Penguin.Persistence.Database
             this.Name = parsedNewName;
         }
 
-        private string RemoveComments(string intext)
+        private static string RemoveComments(string intext)
         {
             string[] lines = intext.Split('\n').Select(s => s.Trim()).ToArray();
 

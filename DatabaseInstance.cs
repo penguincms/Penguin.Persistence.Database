@@ -97,7 +97,11 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="ProdecureName">The name of the procedure to format</param>
         public static string FormatProcedure(string ProdecureName)
         {
-            Contract.Requires(!string.IsNullOrWhiteSpace(ProdecureName));
+            if (ProdecureName is null)
+            {
+                throw new ArgumentNullException(nameof(ProdecureName));
+            }
+
             return "[" + ProdecureName.Trim('[').Trim(']') + "]";
         }
 
@@ -108,7 +112,10 @@ namespace Penguin.Persistence.Database.Objects
         /// <returns>The equivalent SqlDbType to the provided .net type</returns>
         public static SqlDbType GetSqlType(Type type)
         {
-            Contract.Requires(type != null);
+            if (type is null)
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
 
             if (type == typeof(string))
             {
@@ -407,7 +414,15 @@ namespace Penguin.Persistence.Database.Objects
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
         public DataTable ExecuteStoredProcedureToTable(string ProcedureName, List<SqlParameter> parameters)
         {
-            Contract.Requires(parameters != null);
+            if (ProcedureName is null)
+            {
+                throw new ArgumentNullException(nameof(ProcedureName));
+            }
+
+            if (parameters is null)
+            {
+                throw new ArgumentNullException(nameof(parameters));
+            }
 
             this.FormatSqlParameters(ProcedureName, parameters);
 
@@ -609,13 +624,16 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="parameters">The SqlParameter list to ensure compatability</param>
         public void FormatSqlParameters(string ProdecureName, List<SqlParameter> parameters)
         {
-            Contract.Requires(parameters != null);
+            if (parameters is null)
+            {
+                throw new ArgumentNullException(nameof(parameters));
+            }
 
             List<SQLParameterInfo> procParams = this.GetParameters(ProdecureName);
 
             foreach (SqlParameter sqlParameter in parameters)
             {
-                sqlParameter.Value = this.FormatParameter(procParams.First(p => p.PARAMETER_NAME == sqlParameter.ParameterName), sqlParameter.Value);
+                sqlParameter.Value = FormatParameter(procParams.First(p => p.PARAMETER_NAME == sqlParameter.ParameterName), sqlParameter.Value);
             }
         }
 
@@ -628,8 +646,6 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="parameters">The parameter string list to ensure compatability</param>
         public IEnumerable<SqlParameter> FormatSqlParameters(string ProdecureName, IEnumerable<string> parameters)
         {
-            Contract.Requires(parameters != null);
-
             List<SQLParameterInfo> procParams = this.GetParameters(ProdecureName);
 
             for (int i = 0; i < parameters.Count(); i++)
@@ -637,7 +653,7 @@ namespace Penguin.Persistence.Database.Objects
                 SQLParameterInfo procParam = procParams.ElementAt(i);
                 yield return new SqlParameter()
                 {
-                    Value = this.FormatParameter(procParam, parameters.ElementAt(i))?.ToString(),
+                    Value = FormatParameter(procParam, parameters.ElementAt(i))?.ToString(),
                     DbType = TypeConverter.ToDbType(procParam.DATA_TYPE),
                     ParameterName = procParam.PARAMETER_NAME,
                     SqlDbType = procParam.DATA_TYPE
@@ -712,7 +728,10 @@ namespace Penguin.Persistence.Database.Objects
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
         public void Import(DataTable ToImport, string TableName, bool EmptyStringAsNull = true)
         {
-            Contract.Requires(ToImport != null);
+            if (ToImport is null)
+            {
+                throw new ArgumentNullException(nameof(ToImport));
+            }
 
             List<string> Commands = new List<string>(ToImport.Rows.Count + 1);
 
@@ -783,7 +802,11 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="proc">The StoredProcedure object to use as the source for the new procedure</param>
         public void ImportProcedure(StoredProcedure proc)
         {
-            Contract.Requires(proc != null);
+            if (proc is null)
+            {
+                throw new ArgumentNullException(nameof(proc));
+            }
+
             this.DropProcedure(proc.Name);
             this.ExecuteSingleQuery(proc.Body);
         }
@@ -886,6 +909,25 @@ namespace Penguin.Persistence.Database.Objects
             Console.WriteLine($"Transfer completed.");
         }
 
+        private static object FormatParameter(SQLParameterInfo dbParam, object ParamValue)
+        {
+            if (ParamValue is null)
+            {
+                return null;
+            }
+
+            if (dbParam.DATA_TYPE == SqlDbType.DateTime || dbParam.DATA_TYPE == SqlDbType.DateTime2)
+            {
+                return DateTime.Parse(ParamValue.ToString(), CultureInfo.CurrentCulture).ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.CurrentCulture);
+            }
+            else if (dbParam.DATA_TYPE == SqlDbType.Date)
+            {
+                return DateTime.Parse(ParamValue.ToString(), CultureInfo.CurrentCulture).ToString("yyyy-MM-dd", CultureInfo.CurrentCulture);
+            }
+
+            return ParamValue;
+        }
+
         private static string GetStringForType(Type type)
         {
             SqlDbType toReturn = type == null ? SqlDbType.NVarChar : GetSqlType(type);
@@ -923,25 +965,6 @@ namespace Penguin.Persistence.Database.Objects
 
                 connection.Close();
             }
-        }
-
-        private object FormatParameter(SQLParameterInfo dbParam, object ParamValue)
-        {
-            if (ParamValue is null)
-            {
-                return null;
-            }
-
-            if (dbParam.DATA_TYPE == SqlDbType.DateTime || dbParam.DATA_TYPE == SqlDbType.DateTime2)
-            {
-                return DateTime.Parse(ParamValue.ToString(), CultureInfo.CurrentCulture).ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.CurrentCulture);
-            }
-            else if (dbParam.DATA_TYPE == SqlDbType.Date)
-            {
-                return DateTime.Parse(ParamValue.ToString(), CultureInfo.CurrentCulture).ToString("yyyy-MM-dd", CultureInfo.CurrentCulture);
-            }
-
-            return ParamValue;
         }
     }
 }

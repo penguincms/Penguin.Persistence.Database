@@ -13,6 +13,31 @@ namespace Penguin.Persistence.Database
     /// </summary>
     public class ConnectionString
     {
+        /// <summary>
+        /// A class representing the result of an attempt to validate a connection string
+        /// </summary>
+        public class TestResult
+        {
+            /// <summary>
+            /// Any error occured while attempting to validate
+            /// </summary>
+            public Exception Error { get; set; }
+
+            /// <summary>
+            /// Whether or not the connection attempt was successfull
+            /// </summary>
+            public bool Success => this.Error == null;
+
+            internal TestResult()
+            {
+            }
+
+            internal TestResult(Exception ex)
+            {
+                this.Error = ex;
+            }
+        }
+
         private static readonly string[] databaseAliases = { "database", "initial catalog" };
 
         private static readonly string[] passwordAliases = { "password", "pwd" };
@@ -46,39 +71,12 @@ namespace Penguin.Persistence.Database
         private Dictionary<string, string> ConnectionStringDictionary { get; set; }
 
         /// <summary>
-        /// A class representing the result of an attempt to validate a connection string
-        /// </summary>
-        public class TestResult
-        {
-            /// <summary>
-            /// Any error occured while attempting to validate
-            /// </summary>
-            public Exception Error { get; set; }
-
-            /// <summary>
-            /// Whether or not the connection attempt was successfull
-            /// </summary>
-            public bool Success => this.Error == null;
-
-            internal TestResult()
-            {
-            }
-
-            internal TestResult(Exception ex)
-            {
-                this.Error = ex;
-            }
-        }
-
-        /// <summary>
         /// Creates a new instance of this object using the provided connection string
         /// </summary>
         /// <param name="connectionStringToTest">The connection string to be parsed</param>
         public ConnectionString(string connectionStringToTest)
         {
-            Contract.Requires(!string.IsNullOrWhiteSpace(connectionStringToTest));
-
-            this.connectionString = connectionStringToTest;
+            this.connectionString = connectionStringToTest ?? throw new ArgumentNullException(nameof(connectionStringToTest));
             this.ConnectionStringDictionary = connectionStringToTest.Split(';')
                                          .Where(kvp => kvp.Contains('='))
                                          .Select(kvp => kvp.Split(new char[] { '=' }, 2))

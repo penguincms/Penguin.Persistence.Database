@@ -9,6 +9,21 @@
             A class to convert a connection string into a solid object
             </summary>
         </member>
+        <member name="T:Penguin.Persistence.Database.ConnectionString.TestResult">
+            <summary>
+            A class representing the result of an attempt to validate a connection string
+            </summary>
+        </member>
+        <member name="P:Penguin.Persistence.Database.ConnectionString.TestResult.Error">
+            <summary>
+            Any error occured while attempting to validate
+            </summary>
+        </member>
+        <member name="P:Penguin.Persistence.Database.ConnectionString.TestResult.Success">
+            <summary>
+            Whether or not the connection attempt was successfull
+            </summary>
+        </member>
         <member name="P:Penguin.Persistence.Database.ConnectionString.Database">
             <summary>
             The database name for the connection string
@@ -27,21 +42,6 @@
         <member name="P:Penguin.Persistence.Database.ConnectionString.UserName">
             <summary>
             The user name used to access this data source
-            </summary>
-        </member>
-        <member name="T:Penguin.Persistence.Database.ConnectionString.TestResult">
-            <summary>
-            A class representing the result of an attempt to validate a connection string
-            </summary>
-        </member>
-        <member name="P:Penguin.Persistence.Database.ConnectionString.TestResult.Error">
-            <summary>
-            Any error occured while attempting to validate
-            </summary>
-        </member>
-        <member name="P:Penguin.Persistence.Database.ConnectionString.TestResult.Success">
-            <summary>
-            Whether or not the connection attempt was successfull
             </summary>
         </member>
         <member name="M:Penguin.Persistence.Database.ConnectionString.#ctor(System.String)">

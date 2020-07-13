@@ -26,8 +26,10 @@ namespace Penguin.Persistence.Database.Extensions
         /// <returns>A typed list representing all values in a given column of the data table</returns>
         public static List<T> All<T>(this DataTable dt, string ColumnName)
         {
-            Contract.Requires(dt != null);
-            Contract.Requires(!string.IsNullOrWhiteSpace(ColumnName));
+            if (dt is null)
+            {
+                throw new ArgumentNullException(nameof(dt));
+            }
 
             List<T> toReturn = new List<T>();
 
@@ -57,7 +59,10 @@ namespace Penguin.Persistence.Database.Extensions
         /// <returns></returns>
         public static T GetSingle<T>(this DataTable dt, bool IgnoreCase = false)
         {
-            Contract.Requires(dt != null);
+            if (dt is null)
+            {
+                throw new ArgumentNullException(nameof(dt));
+            }
 
             if (dt.Rows.Count > 1 || dt.Columns.Count > 1)
             { throw new Exception(TOO_MANY_RESULTS_MESSAGE); }
@@ -73,7 +78,10 @@ namespace Penguin.Persistence.Database.Extensions
         /// <returns>A data table containing the object values</returns>
         public static DataTable ToDataTable(this IEnumerable<object> objList, bool ShowAllFields = false)
         {
-            Contract.Requires(objList != null);
+            if (objList is null)
+            {
+                throw new ArgumentNullException(nameof(objList));
+            }
 
             DataTable thisTable = new DataTable();
 
@@ -149,7 +157,10 @@ namespace Penguin.Persistence.Database.Extensions
         /// <returns>A casted representation of the requested value</returns>
         public static T Value<T>(this DataRow dr, string ColumnName, bool IgnoreCase = false)
         {
-            Contract.Requires(dr != null);
+            if (dr is null)
+            {
+                throw new ArgumentNullException(nameof(dr));
+            }
 
             if (dr[ColumnName] is null)
             {
