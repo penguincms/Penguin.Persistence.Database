@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO.Compression;
 using System.Linq;
@@ -319,7 +318,6 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="ProcedureName">The name of the procedure to execute</param>
         /// <param name="parameters">The parameters to pass into the stored procedure</param>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
         public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params string[] parameters)
         {
             foreach (object o in this.ExecuteStoredProcedureToList(ProcedureName, parameters))
@@ -334,7 +332,6 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="ProcedureName">The name of the procedure to execute</param>
         /// <param name="parameters">The parameters to pass into the stored procedure</param>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
         public IEnumerable<object> ExecuteStoredProcedureToList(string ProcedureName, params string[] parameters)
         {
             using (DataTable dt = this.ExecuteStoredProcedureToTable(ProcedureName, parameters))
@@ -352,7 +349,6 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="ProcedureName">The name of the procedure to execute</param>
         /// <param name="parameters">The parameters to pass into the stored procedure</param>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
         public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params object[] parameters)
         {
             return this.ExecuteStoredProcedureToList<T>(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
@@ -364,7 +360,6 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="ProcedureName">The name of the procedure to execute</param>
         /// <param name="parameters">The parameters to pass into the stored procedure</param>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
         public IEnumerable<object> ExecuteStoredProcedureToList(string ProcedureName, params object[] parameters)
         {
             return this.ExecuteStoredProcedureToList(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
@@ -486,8 +481,8 @@ namespace Penguin.Persistence.Database.Objects
         /// </summary>
         /// <param name="query">The name of the procedure to execute</param>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "<Pending>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA1801:Review unused parameters", Justification = "<Pending>")]
         public IEnumerable<T> ExecuteToList<T>(string query, T Dummy) where T : class
         {
             Dictionary<string, PropertyInfo> cachedProps = typeof(T).GetProperties().ToDictionary(k => k.Name, v => v, StringComparer.OrdinalIgnoreCase);
@@ -556,7 +551,6 @@ namespace Penguin.Persistence.Database.Objects
         /// Executes a query to a List
         /// </summary>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
         public IEnumerable<T> ExecuteToList<T>(string query, params string[] args)
         {
             foreach (object o in this.ExecuteToList(query, args))
@@ -569,7 +563,6 @@ namespace Penguin.Persistence.Database.Objects
         /// Executes a query to a List
         /// </summary>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
         public IEnumerable<object> ExecuteToList(string query, params string[] args)
         {
             using (DataTable dt = this.ExecuteToTable(query, args))
@@ -752,7 +745,7 @@ namespace Penguin.Persistence.Database.Objects
 
             CreateTableSrc.Append(string.Join(",", ColumnParameters));
 
-            CreateTableSrc.Append(")");
+            CreateTableSrc.Append(')');
 
             Commands.Add(CreateTableSrc.ToString());
             CreateTableSrc.Clear();
@@ -771,7 +764,7 @@ namespace Penguin.Persistence.Database.Objects
 
                 CreateTableSrc.Append(string.Join(", ", Values));
 
-                CreateTableSrc.Append(")");
+                CreateTableSrc.Append(')');
 
                 Commands.Add(CreateTableSrc.ToString());
                 CreateTableSrc.Clear();
