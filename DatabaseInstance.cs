@@ -254,6 +254,11 @@ namespace Penguin.Persistence.Database.Objects
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
         public int Execute(string Query, params object[] args)
         {
+            if (args is null)
+            {
+                throw new ArgumentNullException(nameof(args));
+            }
+
             int affectedRows;
 
             SqlConnection conn = new SqlConnection(this.ConnectionString);
@@ -583,6 +588,11 @@ namespace Penguin.Persistence.Database.Objects
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
         public DataTable ExecuteToTable(string Query, params object[] args)
         {
+            if (args is null)
+            {
+                throw new ArgumentNullException(nameof(args));
+            }
+
             DataTable dt = new DataTable();
             SqlConnection conn = new SqlConnection(this.ConnectionString);
             using (SqlCommand command = new SqlCommand(Query, conn))
