@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageProjectUrl>https://github.com/penguincms/Penguin.Persistence.Database</PackageProjectUrl>
-    <Version>5.0.1</Version>
+    <Version>5.0.5</Version>
     <Description>Light set of classes used to allow Penguins to access MSSQL databases in a slightly-higher-level than ADO but not ORM. Created as a method of bypassing ORM for fallback without needing to reinvent the wheel in ADO. Includes some nice Database access methods as well as a method for converting an IEnumerable to a DataTable using Properties as columns. Also contains a SQL-.NET Type conversion helper</Description>
     <AssemblyName>Penguin.Persistence.Database</AssemblyName>
     <RootNamespace>Penguin.Persistence.Database</RootNamespace>
