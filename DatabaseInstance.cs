@@ -43,6 +43,7 @@ namespace Penguin.Persistence.Database.Objects
         {
             this.ConnectionString = connectionString;
             this.CommandTimeout = commandTimeout;
+            this.CommandBuilder = new TransientCommandBuilder(connectionString, commandTimeout);
         }
 
         public DatabaseInstance(string server, string database, int commandTimeout = 300) : this($"Server={server};Database={database};Trusted_Connection=True;", commandTimeout)
@@ -251,7 +252,6 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="Query">The Query to execute</param>
         /// <param name="args">The ordered values of any "@i" formatted parameters to replace in the query</param>
         /// <returns>The number of rows affected</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
         public int Execute(string Query, params object[] args)
         {
             if (args is null)
@@ -303,7 +303,7 @@ namespace Penguin.Persistence.Database.Objects
         /// Executes a stored procedure by name
         /// </summary>
         /// <param name="ProcedureName">The name of the stored procedure to execute</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        
         public void ExecuteStoredProcedure(string ProcedureName)
         {
             using (SqlConnection conn = new SqlConnection(this.ConnectionString))
@@ -376,7 +376,7 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="ProcedureName">The name of the procedure to execute</param>
         /// <param name="parameters">The parameters to pass into the stored procedure</param>
         /// <returns>A datatable containing the results of the execution</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        
         public DataTable ExecuteStoredProcedureToTable(string ProcedureName, params string[] parameters)
         {
             using (SqlConnection conn = new SqlConnection(this.ConnectionString))
@@ -411,7 +411,7 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="ProcedureName">The name of the procedure to execute</param>
         /// <param name="parameters">The parameters to pass into the stored procedure</param>
         /// <returns>A datatable containing the results of the execution</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        
         public DataTable ExecuteStoredProcedureToTable(string ProcedureName, List<SqlParameter> parameters)
         {
             if (ProcedureName is null)
@@ -482,13 +482,11 @@ namespace Penguin.Persistence.Database.Objects
         }
 
         /// <summary>
-        /// Executes a query to a List
+        /// Executes a query to a List of complex objects, binding each row to an instance by property name
         /// </summary>
         /// <param name="query">The name of the procedure to execute</param>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "<Pending>")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA1801:Review unused parameters", Justification = "<Pending>")]
-        public IEnumerable<T> ExecuteToList<T>(string query, T Dummy) where T : class
+        public IEnumerable<T> ExecuteToComplexList<T>(string query) where T : class
         {
             Dictionary<string, PropertyInfo> cachedProps = typeof(T).GetProperties().ToDictionary(k => k.Name, v => v, StringComparer.OrdinalIgnoreCase);
 
@@ -515,17 +513,18 @@ namespace Penguin.Persistence.Database.Objects
                 }
             }
 
-            using (DataTable dt = this.ExecuteToTable(query))
+            using (TransientCommand Command = this.CommandBuilder.Build(query))
             {
-                foreach (DataRow dataRow in dt.Rows)
+
+                foreach (IDictionary<string, object> row in Command.GetReader().GetRows())
                 {
                     Dictionary<string, object> newObjDict = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
-                    foreach (DataColumn dc in dataRow.Table.Columns)
+                    foreach (string cName in row.Keys)
                     {
-                        if (cachedProps.TryGetValue(dc.ColumnName, out PropertyInfo pi))
+                        if (cachedProps.TryGetValue(cName, out PropertyInfo pi))
                         {
-                            newObjDict.Add(dc.ColumnName, dataRow[dc]);
+                            newObjDict.Add(cName, row[cName]);
                         }
                     }
 
@@ -541,8 +540,13 @@ namespace Penguin.Persistence.Database.Objects
 
                     foreach (PropertyInfo pi in cachedProps.Select(v => v.Value))
                     {
-                        if (newObjDict.TryGetValue(pi.Name, out object val))
+                        if (newObjDict.TryGetValue(pi.Name, out object val) && !(val is DBNull))
                         {
+                            if (val is string sv && pi.PropertyType != typeof(string))
+                            {
+                                val = sv.Convert(pi.PropertyType);
+                            }
+
                             pi.SetValue(toReturn, val);
                         }
                     }
@@ -579,44 +583,30 @@ namespace Penguin.Persistence.Database.Objects
             }
         }
 
+        private readonly TransientCommandBuilder CommandBuilder;
         /// <summary>
         /// Executes a query to a data table with optional parameters.
         /// </summary>
         /// <param name="Query">The query text to execute</param>
         /// <param name="args">The ordered values of any "@i" formatted parameters to replace in the query</param>
         /// <returns>A data table representing the results of the query</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        
         public DataTable ExecuteToTable(string Query, params object[] args)
         {
-            if (args is null)
+            using (TransientCommand command = this.CommandBuilder.Build(Query, args))
             {
-                throw new ArgumentNullException(nameof(args));
-            }
+                DataTable dt = new DataTable();
 
-            DataTable dt = new DataTable();
-            SqlConnection conn = new SqlConnection(this.ConnectionString);
-            using (SqlCommand command = new SqlCommand(Query, conn))
-            {
-                for (int i = 0; i < args.Length; i++)
+                using (SqlDataAdapter da = command.GetDataAdapter())
                 {
-                    SqlParameter param = new SqlParameter($"@{i}", args[i]);
-
-                    command.Parameters.Add(param);
+                    da.Fill(dt);
                 }
-                command.CommandTimeout = this.CommandTimeout;
 
-                conn.Open();
-
-                // create data adapter
-                SqlDataAdapter da = new SqlDataAdapter(command);
-                // this will query your database and return the result to your datatable
-                da.Fill(dt);
-                conn.Close();
-                da.Dispose();
+                return dt;
             }
-
-            return dt;
         }
+
+
 
         /// <summary>
         /// Ensures that data coming from the client is convertable for SQL.
@@ -728,7 +718,7 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="ToImport">The DataTable to import</param>
         /// <param name="TableName">The name to give the new SQL table</param>
         /// <param name="EmptyStringAsNull">If true, String.Empty will be set as null in the new table</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        
         public void Import(DataTable ToImport, string TableName, bool EmptyStringAsNull = true)
         {
             if (ToImport is null)
@@ -950,7 +940,7 @@ namespace Penguin.Persistence.Database.Objects
             return $"{toReturn}{postFix}";
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "<Pending>")]
+        
         private void ExecuteSingleQuery(string Text)
         {
             using (SqlConnection connection = new SqlConnection(this.ConnectionString))

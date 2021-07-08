@@ -1,25 +1,34 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
-VisualStudioVersion = 16.0.29215.179
+VisualStudioVersion = 16.6.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Penguin.Persistence.Database", "Penguin.Persistence.Database.csproj", "{B7F5F422-EEA1-46DA-9B25-402737BB50DF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Penguin.Persistence.Database", "Penguin.Persistence.Database.csproj", "{7B00C3EE-47CD-4440-ACDF-F797B7837E3D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{B7F5F422-EEA1-46DA-9B25-402737BB50DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B7F5F422-EEA1-46DA-9B25-402737BB50DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B7F5F422-EEA1-46DA-9B25-402737BB50DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B7F5F422-EEA1-46DA-9B25-402737BB50DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {106891CD-2E63-4A6D-903D-1537C26C86CB}
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7B00C3EE-47CD-4440-ACDF-F797B7837E3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B00C3EE-47CD-4440-ACDF-F797B7837E3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B00C3EE-47CD-4440-ACDF-F797B7837E3D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7B00C3EE-47CD-4440-ACDF-F797B7837E3D}.Debug|x64.Build.0 = Debug|Any CPU
+		{7B00C3EE-47CD-4440-ACDF-F797B7837E3D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7B00C3EE-47CD-4440-ACDF-F797B7837E3D}.Debug|x86.Build.0 = Debug|Any CPU
+		{7B00C3EE-47CD-4440-ACDF-F797B7837E3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B00C3EE-47CD-4440-ACDF-F797B7837E3D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B00C3EE-47CD-4440-ACDF-F797B7837E3D}.Release|x64.ActiveCfg = Release|Any CPU
+		{7B00C3EE-47CD-4440-ACDF-F797B7837E3D}.Release|x64.Build.0 = Release|Any CPU
+		{7B00C3EE-47CD-4440-ACDF-F797B7837E3D}.Release|x86.ActiveCfg = Release|Any CPU
+		{7B00C3EE-47CD-4440-ACDF-F797B7837E3D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

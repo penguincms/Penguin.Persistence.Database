@@ -236,9 +236,9 @@
             <param name="args">The ordered values of any "@i" formatted parameters to replace in the query</param>
             <returns>A dictionary representing the result of the query</returns>
         </member>
-        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteToList``1(System.String,``0)">
+        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteToComplexList``1(System.String)">
             <summary>
-            Executes a query to a List
+            Executes a query to a List of complex objects, binding each row to an instance by property name
             </summary>
             <param name="query">The name of the procedure to execute</param>
             <returns>An IEnumerable of object representing the first value of each row </returns>
