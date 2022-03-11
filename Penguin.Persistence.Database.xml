@@ -236,7 +236,7 @@
             <param name="args">The ordered values of any "@i" formatted parameters to replace in the query</param>
             <returns>A dictionary representing the result of the query</returns>
         </member>
-        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteToComplexList``1(System.String)">
+        <member name="M:Penguin.Persistence.Database.Objects.DatabaseInstance.ExecuteToComplex``1(System.String)">
             <summary>
             Executes a query to a List of complex objects, binding each row to an instance by property name
             </summary>

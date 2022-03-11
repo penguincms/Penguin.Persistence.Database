@@ -486,7 +486,7 @@ namespace Penguin.Persistence.Database.Objects
         /// </summary>
         /// <param name="query">The name of the procedure to execute</param>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        public IEnumerable<T> ExecuteToComplexList<T>(string query) where T : class
+        public IEnumerable<T> ExecuteToComplex<T>(string query) where T : class
         {
             Dictionary<string, PropertyInfo> cachedProps = typeof(T).GetProperties().ToDictionary(k => k.Name, v => v, StringComparer.OrdinalIgnoreCase);
 
@@ -513,9 +513,13 @@ namespace Penguin.Persistence.Database.Objects
                 }
             }
 
+            if(chosenConstructor is null)
+            {
+                throw new Exception("No parameterless constructor defined");
+            }
+
             using (TransientCommand Command = this.CommandBuilder.Build(query))
             {
-
                 foreach (IDictionary<string, object> row in Command.GetReader().GetRows())
                 {
                     Dictionary<string, object> newObjDict = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
