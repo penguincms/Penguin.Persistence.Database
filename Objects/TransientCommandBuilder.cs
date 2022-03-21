@@ -11,9 +11,6 @@
         public int CommandTimeout { get; private set; }
         public string ConnectionString { get; private set; }
 
-        public TransientCommand Build(string Query, params object[] args)
-        {
-            return TransientCommand.Build(Query, this.ConnectionString, this.CommandTimeout, args);
-        }
+        public TransientCommand Build(string Query, params object[] args) => TransientCommand.Build(Query, this.ConnectionString, this.CommandTimeout, args);
     }
 }

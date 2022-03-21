@@ -221,10 +221,7 @@ namespace Penguin.Persistence.Database.Objects
             }
         }
 
-        public void Backup(string FileName, bool Compress = false)
-        {
-            Backup(this.ConnectionString, FileName, Compress);
-        }
+        public void Backup(string FileName, bool Compress = false) => Backup(this.ConnectionString, FileName, Compress);
 
         /// <summary>
         /// Drops a stored procedure from the database
@@ -241,10 +238,7 @@ namespace Penguin.Persistence.Database.Objects
         /// Drops a table from the database
         /// </summary>
         /// <param name="TableName">The name of the table to drop</param>
-        public void DropTable(string TableName)
-        {
-            this.ExecuteSingleQuery($"Drop table [{TableName}]");
-        }
+        public void DropTable(string TableName) => this.ExecuteSingleQuery($"Drop table [{TableName}]");
 
         /// <summary>
         /// Executes a string Query
@@ -303,7 +297,7 @@ namespace Penguin.Persistence.Database.Objects
         /// Executes a stored procedure by name
         /// </summary>
         /// <param name="ProcedureName">The name of the stored procedure to execute</param>
-        
+
         public void ExecuteStoredProcedure(string ProcedureName)
         {
             using (SqlConnection conn = new SqlConnection(this.ConnectionString))
@@ -354,10 +348,7 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="ProcedureName">The name of the procedure to execute</param>
         /// <param name="parameters">The parameters to pass into the stored procedure</param>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params object[] parameters)
-        {
-            return this.ExecuteStoredProcedureToList<T>(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
-        }
+        public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params object[] parameters) => this.ExecuteStoredProcedureToList<T>(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
 
         /// <summary>
         /// Executes a stored procedure to a datatable
@@ -365,10 +356,7 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="ProcedureName">The name of the procedure to execute</param>
         /// <param name="parameters">The parameters to pass into the stored procedure</param>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        public IEnumerable<object> ExecuteStoredProcedureToList(string ProcedureName, params object[] parameters)
-        {
-            return this.ExecuteStoredProcedureToList(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
-        }
+        public IEnumerable<object> ExecuteStoredProcedureToList(string ProcedureName, params object[] parameters) => this.ExecuteStoredProcedureToList(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
 
         /// <summary>
         /// Executes a stored procedure to a datatable
@@ -376,7 +364,7 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="ProcedureName">The name of the procedure to execute</param>
         /// <param name="parameters">The parameters to pass into the stored procedure</param>
         /// <returns>A datatable containing the results of the execution</returns>
-        
+
         public DataTable ExecuteStoredProcedureToTable(string ProcedureName, params string[] parameters)
         {
             using (SqlConnection conn = new SqlConnection(this.ConnectionString))
@@ -411,7 +399,7 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="ProcedureName">The name of the procedure to execute</param>
         /// <param name="parameters">The parameters to pass into the stored procedure</param>
         /// <returns>A datatable containing the results of the execution</returns>
-        
+
         public DataTable ExecuteStoredProcedureToTable(string ProcedureName, List<SqlParameter> parameters)
         {
             if (ProcedureName is null)
@@ -594,7 +582,7 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="Query">The query text to execute</param>
         /// <param name="args">The ordered values of any "@i" formatted parameters to replace in the query</param>
         /// <returns>A data table representing the results of the query</returns>
-        
+
         public DataTable ExecuteToTable(string Query, params object[] args)
         {
             using (TransientCommand command = this.CommandBuilder.Build(Query, args))
@@ -722,7 +710,7 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="ToImport">The DataTable to import</param>
         /// <param name="TableName">The name to give the new SQL table</param>
         /// <param name="EmptyStringAsNull">If true, String.Empty will be set as null in the new table</param>
-        
+
         public void Import(DataTable ToImport, string TableName, bool EmptyStringAsNull = true)
         {
             if (ToImport is null)
@@ -813,10 +801,7 @@ namespace Penguin.Persistence.Database.Objects
         /// </summary>
         /// <param name="FileName">The file name to run</param>
         /// <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
-        public async Task Restore(string FileName, string SplitOn = ScriptHelpers.DEFAULT_SPLIT, Encoding encoding = null)
-        {
-            await Restore(FileName, this.ConnectionString, this.CommandTimeout, SplitOn, encoding ?? Encoding.Default);
-        }
+        public async Task Restore(string FileName, string SplitOn = ScriptHelpers.DEFAULT_SPLIT, Encoding encoding = null) => await Restore(FileName, this.ConnectionString, this.CommandTimeout, SplitOn, encoding ?? Encoding.Default);
 
         /// <summary>
         /// Returns a count of the rows in the given table
@@ -944,7 +929,7 @@ namespace Penguin.Persistence.Database.Objects
             return $"{toReturn}{postFix}";
         }
 
-        
+
         private void ExecuteSingleQuery(string Text)
         {
             using (SqlConnection connection = new SqlConnection(this.ConnectionString))
