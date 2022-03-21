@@ -18,6 +18,10 @@
     <ProjectReference Include="..\Penguin.Extensions.Exceptions\Penguin.Extensions.Exceptions.Local.csproj" />
     <ProjectReference Include="..\Penguin.Extensions.String\Penguin.Extensions.String.Local.csproj" />
     <ProjectReference Include="..\Penguin.FileStreams\Penguin.FileStreams.Local.csproj" />
+    <ProjectReference Include="..\Penguin.Persistence.Abstractions\Penguin.Persistence.Abstractions.Local.csproj" />
+    <ProjectReference Include="..\Penguin.Reflection.Abstractions\Penguin.Reflection.Abstractions.Local.csproj" />
+    <ProjectReference Include="..\Penguin.Reflection.Extensions\Penguin.Reflection.Extensions.Local.csproj" />
+    <ProjectReference Include="..\Penguin.Threading.BackgroundWorker\Penguin.Threading.BackgroundWorker.Local.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Generate\StoredProcedures\Tools\_GetAllProcedures.sql" />

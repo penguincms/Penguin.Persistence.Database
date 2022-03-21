@@ -1,4 +1,4 @@
-﻿using Microsoft.SqlServer.Management.Common;
+using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
 using Penguin.Debugging;
 using Penguin.Persistence.Database.Extensions;
@@ -598,8 +598,6 @@ namespace Penguin.Persistence.Database.Objects
             }
         }
 
-
-
         /// <summary>
         /// Ensures that data coming from the client is convertable for SQL.
         /// Created because HTML5 posts datetime with a "T" in the middle which
@@ -928,7 +926,6 @@ namespace Penguin.Persistence.Database.Objects
 
             return $"{toReturn}{postFix}";
         }
-
 
         private void ExecuteSingleQuery(string Text)
         {

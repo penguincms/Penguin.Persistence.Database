@@ -1,4 +1,4 @@
-﻿using Penguin.Persistence.Database.Extensions;
+using Penguin.Persistence.Database.Extensions;
 using System.Data;
 
 namespace Penguin.Persistence.Database
@@ -9,7 +9,6 @@ namespace Penguin.Persistence.Database
     public class SQLParameterInfo
     {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-
 
         public string AS_LOCATOR { get; set; }
         public int? CHARACTER_MAXIMUM_LENGTH { get; set; }
@@ -42,7 +41,6 @@ namespace Penguin.Persistence.Database
         public string USER_DEFINED_TYPE_CATALOG { get; set; }
         public string USER_DEFINED_TYPE_NAME { get; set; }
         public string USER_DEFINED_TYPE_SCHEMA { get; set; }
-
 
         public SQLParameterInfo(DataRow dr)
         {
