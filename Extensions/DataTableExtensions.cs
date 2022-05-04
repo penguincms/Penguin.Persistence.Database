@@ -129,7 +129,7 @@ namespace Penguin.Persistence.Database.Extensions
                     DisplayName = thisProperty.Name;
                 }
 
-                thisTable.Columns.Add(DisplayName);
+                _ = thisTable.Columns.Add(DisplayName);
             }
 
             foreach (object thisObj in objList)

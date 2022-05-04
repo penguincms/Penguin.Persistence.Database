@@ -3,6 +3,7 @@ using Microsoft.SqlServer.Management.Smo;
 using Penguin.Debugging;
 using Penguin.Persistence.Database.Extensions;
 using Penguin.Persistence.Database.Helpers;
+using Penguin.Persistence.Database.Objects;
 using Penguin.Reflection.Extensions;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Penguin.Persistence.Database.Objects
+namespace Penguin.Persistence.Database
 {
     /// <summary>
     /// An object used to provide slightly better access to a database than using simple ADO
@@ -85,7 +86,7 @@ namespace Penguin.Persistence.Database.Objects
 
             if (Compress)
             {
-                Penguin.Persistence.Database.Helpers.ScriptHelpers.CompressScript(FileName);
+                ScriptHelpers.CompressScript(FileName);
             }
 
             Console.WriteLine($"Backup completed.");
@@ -195,7 +196,7 @@ namespace Penguin.Persistence.Database.Objects
                 {
                     // Open the connection and execute the reader.
 
-                    command.ExecuteNonQuery();
+                    _ = command.ExecuteNonQuery();
                 }
             }
             StaticLogger.Log("Truncating Complete.");
@@ -212,7 +213,7 @@ namespace Penguin.Persistence.Database.Objects
 
             using (ZipArchive zip = ZipFile.Open(zipName, ZipArchiveMode.Create))
             {
-                zip.CreateEntryFromFile(FileName, new System.IO.FileInfo(FileName).Name, CompressionLevel.Optimal);
+                _ = zip.CreateEntryFromFile(FileName, new System.IO.FileInfo(FileName).Name, CompressionLevel.Optimal);
             }
 
             if (Delete)
@@ -221,7 +222,10 @@ namespace Penguin.Persistence.Database.Objects
             }
         }
 
-        public void Backup(string FileName, bool Compress = false) => Backup(this.ConnectionString, FileName, Compress);
+        public void Backup(string FileName, bool Compress = false)
+        {
+            Backup(this.ConnectionString, FileName, Compress);
+        }
 
         /// <summary>
         /// Drops a stored procedure from the database
@@ -238,7 +242,10 @@ namespace Penguin.Persistence.Database.Objects
         /// Drops a table from the database
         /// </summary>
         /// <param name="TableName">The name of the table to drop</param>
-        public void DropTable(string TableName) => this.ExecuteSingleQuery($"Drop table [{TableName}]");
+        public void DropTable(string TableName)
+        {
+            this.ExecuteSingleQuery($"Drop table [{TableName}]");
+        }
 
         /// <summary>
         /// Executes a string Query
@@ -262,7 +269,7 @@ namespace Penguin.Persistence.Database.Objects
                 {
                     SqlParameter param = new SqlParameter($"@{i}", args[i]);
 
-                    command.Parameters.Add(param);
+                    _ = command.Parameters.Add(param);
                 }
 
                 command.CommandTimeout = this.CommandTimeout;
@@ -306,7 +313,7 @@ namespace Penguin.Persistence.Database.Objects
                 {
                     command.CommandTimeout = this.CommandTimeout;
                     conn.Open();
-                    command.ExecuteNonQuery();
+                    _ = command.ExecuteNonQuery();
                 }
             }
         }
@@ -348,7 +355,28 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="ProcedureName">The name of the procedure to execute</param>
         /// <param name="parameters">The parameters to pass into the stored procedure</param>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params object[] parameters) => this.ExecuteStoredProcedureToList<T>(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
+
+        /* Unmerged change from project 'Penguin.Persistence.Database.Local (net5.0)'
+        Before:
+                public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params object[] parameters) => this.ExecuteStoredProcedureToList<T>(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
+        After:
+                public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params object[] parameters)
+                {
+                    return this.ExecuteStoredProcedureToList<T>(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
+        */
+
+        /* Unmerged change from project 'Penguin.Persistence.Database.Local (netstandard2.1)'
+        Before:
+                public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params object[] parameters) => this.ExecuteStoredProcedureToList<T>(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
+        After:
+                public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params object[] parameters)
+                {
+                    return this.ExecuteStoredProcedureToList<T>(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
+        */
+        public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params object[] parameters)
+        {
+            return this.ExecuteStoredProcedureToList<T>(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
+        }
 
         /// <summary>
         /// Executes a stored procedure to a datatable
@@ -356,7 +384,10 @@ namespace Penguin.Persistence.Database.Objects
         /// <param name="ProcedureName">The name of the procedure to execute</param>
         /// <param name="parameters">The parameters to pass into the stored procedure</param>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        public IEnumerable<object> ExecuteStoredProcedureToList(string ProcedureName, params object[] parameters) => this.ExecuteStoredProcedureToList(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
+        public IEnumerable<object> ExecuteStoredProcedureToList(string ProcedureName, params object[] parameters)
+        {
+            return this.ExecuteStoredProcedureToList(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
+        }
 
         /// <summary>
         /// Executes a stored procedure to a datatable
@@ -379,13 +410,13 @@ namespace Penguin.Persistence.Database.Objects
 
                     foreach (SqlParameter parameter in this.FormatSqlParameters(ProcedureName, parameters))
                     {
-                        cmd.Parameters.Add(parameter);
+                        _ = cmd.Parameters.Add(parameter);
                     }
 
                     // create data adapter
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
                     // this will query your database and return the result to your datatable
-                    da.Fill(dt);
+                    _ = da.Fill(dt);
                     conn.Close();
                     da.Dispose();
                 }
@@ -426,13 +457,13 @@ namespace Penguin.Persistence.Database.Objects
 
                     foreach (SqlParameter parameter in parameters)
                     {
-                        cmd.Parameters.Add(parameter);
+                        _ = cmd.Parameters.Add(parameter);
                     }
 
                     // create data adapter
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
                     // this will query your database and return the result to your datatable
-                    da.Fill(dt);
+                    _ = da.Fill(dt);
                     conn.Close();
                     da.Dispose();
                 }
@@ -488,7 +519,7 @@ namespace Penguin.Persistence.Database.Objects
 
                 foreach (ParameterInfo pi in c.GetParameters())
                 {
-                    if (!cachedProps.TryGetValue(pi.Name, out PropertyInfo _))
+                    if (!cachedProps.TryGetValue(pi.Name, out _))
                     {
                         picked = false;
                     }
@@ -501,7 +532,7 @@ namespace Penguin.Persistence.Database.Objects
                 }
             }
 
-            if(chosenConstructor is null)
+            if (chosenConstructor is null)
             {
                 throw new Exception("No parameterless constructor defined");
             }
@@ -525,7 +556,7 @@ namespace Penguin.Persistence.Database.Objects
                     foreach (ParameterInfo pi in chosenConstructor.GetParameters())
                     {
                         parameters.Add(newObjDict[pi.Name]);
-                        newObjDict.Remove(pi.Name);
+                        _ = newObjDict.Remove(pi.Name);
                     }
 
                     T toReturn = Activator.CreateInstance(typeof(T), parameters.ToArray()) as T;
@@ -591,7 +622,7 @@ namespace Penguin.Persistence.Database.Objects
 
                 using (SqlDataAdapter da = command.GetDataAdapter())
                 {
-                    da.Fill(dt);
+                    _ = da.Fill(dt);
                 }
 
                 return dt;
@@ -720,7 +751,7 @@ namespace Penguin.Persistence.Database.Objects
 
             StringBuilder CreateTableSrc = new StringBuilder();
 
-            CreateTableSrc.Append($"CREATE TABLE {TableName} (");
+            _ = CreateTableSrc.Append($"CREATE TABLE {TableName} (");
 
             List<string> Columns = new List<string>();
             List<string> ColumnParameters = new List<string>();
@@ -733,17 +764,17 @@ namespace Penguin.Persistence.Database.Objects
                 Columns.Add($"[{ColumnName}]");
             };
 
-            CreateTableSrc.Append(string.Join(",", ColumnParameters));
+            _ = CreateTableSrc.Append(string.Join(",", ColumnParameters));
 
-            CreateTableSrc.Append(')');
+            _ = CreateTableSrc.Append(')');
 
             Commands.Add(CreateTableSrc.ToString());
-            CreateTableSrc.Clear();
+            _ = CreateTableSrc.Clear();
 
             //Switch to Parameter binding at least
             foreach (DataRow dr in ToImport.Rows)
             {
-                CreateTableSrc.Append($"insert into [{TableName}] ({string.Join(",", Columns)}) Values (");
+                _ = CreateTableSrc.Append($"insert into [{TableName}] ({string.Join(",", Columns)}) Values (");
 
                 List<string> Values = new List<string>();
 
@@ -752,12 +783,12 @@ namespace Penguin.Persistence.Database.Objects
                     Values.Add(o is null || (EmptyStringAsNull && string.IsNullOrWhiteSpace(o.ToString())) ? "null" : $"'{o.ToString().Replace("'", "''")}'");
                 }
 
-                CreateTableSrc.Append(string.Join(", ", Values));
+                _ = CreateTableSrc.Append(string.Join(", ", Values));
 
-                CreateTableSrc.Append(')');
+                _ = CreateTableSrc.Append(')');
 
                 Commands.Add(CreateTableSrc.ToString());
-                CreateTableSrc.Clear();
+                _ = CreateTableSrc.Clear();
             }
 
             using (SqlConnection connection = new SqlConnection(this.ConnectionString))
@@ -772,7 +803,7 @@ namespace Penguin.Persistence.Database.Objects
                         CommandTimeout = this.CommandTimeout
                     })
                     {
-                        command.ExecuteNonQuery();
+                        _ = command.ExecuteNonQuery();
                     }
                 }
                 connection.Close();
@@ -799,7 +830,10 @@ namespace Penguin.Persistence.Database.Objects
         /// </summary>
         /// <param name="FileName">The file name to run</param>
         /// <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
-        public async Task Restore(string FileName, string SplitOn = ScriptHelpers.DEFAULT_SPLIT, Encoding encoding = null) => await Restore(FileName, this.ConnectionString, this.CommandTimeout, SplitOn, encoding ?? Encoding.Default);
+        public async Task Restore(string FileName, string SplitOn = ScriptHelpers.DEFAULT_SPLIT, Encoding encoding = null)
+        {
+            await Restore(FileName, this.ConnectionString, this.CommandTimeout, SplitOn, encoding ?? Encoding.Default);
+        }
 
         /// <summary>
         /// Returns a count of the rows in the given table
@@ -885,7 +919,7 @@ namespace Penguin.Persistence.Database.Objects
             };
 
             Console.WriteLine($"Starting Transfer of {connection.DataSource}\\{connection.Database}...");
-            transfer.EnumScriptTransfer();
+            _ = transfer.EnumScriptTransfer();
             Console.WriteLine($"Transfer completed.");
         }
 
@@ -939,7 +973,7 @@ namespace Penguin.Persistence.Database.Objects
                     CommandTimeout = this.CommandTimeout
                 })
                 {
-                    command.ExecuteNonQuery();
+                    _ = command.ExecuteNonQuery();
                 }
 
                 connection.Close();

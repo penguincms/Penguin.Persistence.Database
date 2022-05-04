@@ -35,55 +35,55 @@ namespace Penguin.Persistence.Database
         {
             DbTypeMapEntry dbTypeMapEntry
             = new DbTypeMapEntry(typeof(bool), DbType.Boolean, SqlDbType.Bit);
-            _DbTypeList.Add(dbTypeMapEntry);
+            _ = _DbTypeList.Add(dbTypeMapEntry);
 
             dbTypeMapEntry
             = new DbTypeMapEntry(typeof(byte), DbType.Double, SqlDbType.TinyInt);
-            _DbTypeList.Add(dbTypeMapEntry);
+            _ = _DbTypeList.Add(dbTypeMapEntry);
 
             dbTypeMapEntry
             = new DbTypeMapEntry(typeof(byte[]), DbType.Binary, SqlDbType.Image);
-            _DbTypeList.Add(dbTypeMapEntry);
+            _ = _DbTypeList.Add(dbTypeMapEntry);
 
             dbTypeMapEntry
             = new DbTypeMapEntry(typeof(DateTime), DbType.DateTime, SqlDbType.DateTime);
-            _DbTypeList.Add(dbTypeMapEntry);
+            _ = _DbTypeList.Add(dbTypeMapEntry);
 
             dbTypeMapEntry
             = new DbTypeMapEntry(typeof(DateTime), DbType.Date, SqlDbType.Date);
-            _DbTypeList.Add(dbTypeMapEntry);
+            _ = _DbTypeList.Add(dbTypeMapEntry);
 
             dbTypeMapEntry
             = new DbTypeMapEntry(typeof(decimal), DbType.Decimal, SqlDbType.Decimal);
-            _DbTypeList.Add(dbTypeMapEntry);
+            _ = _DbTypeList.Add(dbTypeMapEntry);
 
             dbTypeMapEntry
             = new DbTypeMapEntry(typeof(double), DbType.Double, SqlDbType.Float);
-            _DbTypeList.Add(dbTypeMapEntry);
+            _ = _DbTypeList.Add(dbTypeMapEntry);
 
             dbTypeMapEntry
             = new DbTypeMapEntry(typeof(Guid), DbType.Guid, SqlDbType.UniqueIdentifier);
-            _DbTypeList.Add(dbTypeMapEntry);
+            _ = _DbTypeList.Add(dbTypeMapEntry);
 
             dbTypeMapEntry
             = new DbTypeMapEntry(typeof(short), DbType.Int16, SqlDbType.SmallInt);
-            _DbTypeList.Add(dbTypeMapEntry);
+            _ = _DbTypeList.Add(dbTypeMapEntry);
 
             dbTypeMapEntry
             = new DbTypeMapEntry(typeof(int), DbType.Int32, SqlDbType.Int);
-            _DbTypeList.Add(dbTypeMapEntry);
+            _ = _DbTypeList.Add(dbTypeMapEntry);
 
             dbTypeMapEntry
             = new DbTypeMapEntry(typeof(long), DbType.Int64, SqlDbType.BigInt);
-            _DbTypeList.Add(dbTypeMapEntry);
+            _ = _DbTypeList.Add(dbTypeMapEntry);
 
             dbTypeMapEntry
             = new DbTypeMapEntry(typeof(object), DbType.Object, SqlDbType.Variant);
-            _DbTypeList.Add(dbTypeMapEntry);
+            _ = _DbTypeList.Add(dbTypeMapEntry);
 
             dbTypeMapEntry
             = new DbTypeMapEntry(typeof(string), DbType.String, SqlDbType.VarChar);
-            _DbTypeList.Add(dbTypeMapEntry);
+            _ = _DbTypeList.Add(dbTypeMapEntry);
         }
 
         private TypeConverter()

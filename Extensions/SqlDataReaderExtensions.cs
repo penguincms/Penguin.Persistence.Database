@@ -40,7 +40,7 @@ namespace Penguin.Persistence.Database.Extensions
                     yield return itemArray;
                 }
 
-                reader.NextResult();
+                _ = reader.NextResult();
             }
         }
 

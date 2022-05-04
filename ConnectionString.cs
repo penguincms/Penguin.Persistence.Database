@@ -138,7 +138,10 @@ namespace Penguin.Persistence.Database
         /// Attempts to test this connection string using SqlConnection
         /// </summary>
         /// <returns></returns>
-        public TestResult Test() => Test(this.connectionString);
+        public TestResult Test()
+        {
+            return Test(this.connectionString);
+        }
 
         private string GetAliasedValue(string[] aliases)
         {

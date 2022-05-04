@@ -3,7 +3,7 @@ using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
 using Penguin.Debugging;
 using Penguin.Persistence.Database.Objects;
-using Penguin.Threading;
+using Penguin.Threading.BackgroundWorker;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -130,7 +130,7 @@ namespace Penguin.Persistence.Database.Helpers
                                 {
                                     StaticLogger.Log($"Executing Command {cmd.CommandNumber} - {Math.Round(cmd.Progress, 2)}%");
 
-                                    server.ConnectionContext.ExecuteNonQuery(cmd.Text);
+                                    _ = server.ConnectionContext.ExecuteNonQuery(cmd.Text);
                                 }
                                 catch (Exception ex)
                                 {
@@ -197,7 +197,7 @@ namespace Penguin.Persistence.Database.Helpers
 
                         for (int i = 0; i < BufferLength; i++)
                         {
-                            if (buffer[(bufferPointer - ((buffer.Length - 1) - i) % buffer.Length + buffer.Length) % buffer.Length] != SplitOn[i])
+                            if (buffer[(bufferPointer - ((buffer.Length - 1 - i) % buffer.Length) + buffer.Length) % buffer.Length] != SplitOn[i])
                             {
                                 breakScript = false;
                                 break;
@@ -244,7 +244,7 @@ namespace Penguin.Persistence.Database.Helpers
 
                             Commands.Enqueue(icmd);
 
-                            currentCommand.Clear();
+                            _ = currentCommand.Clear();
 
                             buffer = new char[BufferLength];
                             bufferPointer = 0;
@@ -254,7 +254,7 @@ namespace Penguin.Persistence.Database.Helpers
                         {
                             if (wrapped)
                             {
-                                currentCommand.Append(buffer[bufferPointer]);
+                                _ = currentCommand.Append(buffer[bufferPointer]);
                             }
                         }
                     }
@@ -280,10 +280,10 @@ namespace Penguin.Persistence.Database.Helpers
                             break;
                         }
 
-                        currentCommand.Append(buffer[bufferPointer]);
+                        _ = currentCommand.Append(buffer[bufferPointer]);
                     } while (true);
 
-                    AsyncSqlCommand lcmd = new AsyncSqlCommand(currentCommand.ToString(), ((reader.BaseStream.Position / streamLength) * 100), commandNumber);
+                    AsyncSqlCommand lcmd = new AsyncSqlCommand(currentCommand.ToString(), reader.BaseStream.Position / streamLength * 100, commandNumber);
 
                     Commands.Enqueue(lcmd);
 
@@ -294,8 +294,8 @@ namespace Penguin.Persistence.Database.Helpers
             Task<bool> FileReadResult = FileReadWorker.RunWorkerAsync();
             Task<bool> SqlProcessResult = SQLWorker.RunWorkerAsync();
 
-            await FileReadResult;
-            await SqlProcessResult;
+            _ = await FileReadResult;
+            _ = await SqlProcessResult;
         }
 
         internal static async Task RunSplitScript(string FilePath, string ConnectionString, int TimeOut = 0, string SplitOn = DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = 4096)
@@ -339,11 +339,11 @@ namespace Penguin.Persistence.Database.Helpers
 
                 long thisBlock = Math.Min(source.Length, BUFFER_SIZE);
 
-                source.Seek(-1 * thisBlock, SeekOrigin.End);
+                _ = source.Seek(-1 * thisBlock, SeekOrigin.End);
 
                 byte[] buffer = new byte[thisBlock];
 
-                source.Read(buffer, 0, buffer.Length);
+                _ = source.Read(buffer, 0, buffer.Length);
 
                 if (toInvoke != null)
                 {

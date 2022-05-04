@@ -11,9 +11,15 @@ namespace Penguin.Persistence.Database.Objects
 
         private bool disposedValue;
 
-        public SqlDataAdapter GetDataAdapter() => new SqlDataAdapter(this.Command);
+        public SqlDataAdapter GetDataAdapter()
+        {
+            return new SqlDataAdapter(this.Command);
+        }
 
-        public SqlDataReader GetReader() => this.Command.ExecuteReader();
+        public SqlDataReader GetReader()
+        {
+            return this.Command.ExecuteReader();
+        }
 
         public static TransientCommand Build(string Query, string ConnectionString, int CommandTimeout, params object[] args)
         {
@@ -29,7 +35,7 @@ namespace Penguin.Persistence.Database.Objects
             {
                 SqlParameter param = new SqlParameter($"@{i}", args[i]);
 
-                command.Parameters.Add(param);
+                _ = command.Parameters.Add(param);
             }
 
             command.CommandTimeout = CommandTimeout;
