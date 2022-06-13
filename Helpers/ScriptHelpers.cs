@@ -4,6 +4,7 @@ using Microsoft.SqlServer.Management.Smo;
 using Penguin.Debugging;
 using Penguin.Persistence.Database.Objects;
 using Penguin.Threading;
+using BackgroundWorker = Penguin.Threading.BackgroundWorker.BackgroundWorker;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
