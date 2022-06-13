@@ -355,24 +355,6 @@ namespace Penguin.Persistence.Database
         /// <param name="ProcedureName">The name of the procedure to execute</param>
         /// <param name="parameters">The parameters to pass into the stored procedure</param>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
-
-        /* Unmerged change from project 'Penguin.Persistence.Database.Local (net5.0)'
-        Before:
-                public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params object[] parameters) => this.ExecuteStoredProcedureToList<T>(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
-        After:
-                public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params object[] parameters)
-                {
-                    return this.ExecuteStoredProcedureToList<T>(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
-        */
-
-        /* Unmerged change from project 'Penguin.Persistence.Database.Local (netstandard2.1)'
-        Before:
-                public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params object[] parameters) => this.ExecuteStoredProcedureToList<T>(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
-        After:
-                public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params object[] parameters)
-                {
-                    return this.ExecuteStoredProcedureToList<T>(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
-        */
         public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params object[] parameters)
         {
             return this.ExecuteStoredProcedureToList<T>(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
@@ -583,11 +565,18 @@ namespace Penguin.Persistence.Database
         /// Executes a query to a List
         /// </summary>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        public IEnumerable<T> ExecuteToList<T>(string query, params string[] args)
+        public IEnumerable<T> Enumerate<T>(string query, params string[] args)
         {
-            foreach (object o in this.ExecuteToList(query, args))
+            foreach (object o in this.Enumerate(query, args))
             {
-                yield return o.ToString().Convert<T>();
+                if (o is T t)
+                {
+                    yield return t;
+                }
+                else
+                {
+                    yield return o.ToString().Convert<T>();
+                }
             }
         }
 
@@ -595,13 +584,20 @@ namespace Penguin.Persistence.Database
         /// Executes a query to a List
         /// </summary>
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
-        public IEnumerable<object> ExecuteToList(string query, params string[] args)
+        public IEnumerable<object> Enumerate(string query, params string[] args)
         {
-            using (DataTable dt = this.ExecuteToTable(query, args))
+            using (TransientCommand Command = this.CommandBuilder.Build(query, args))
             {
-                foreach (DataRow dataRow in dt.Rows)
+                SqlDataReader reader = Command.GetReader();
+                
+                if(reader.VisibleFieldCount > 1)
                 {
-                    yield return dataRow[0];
+                    throw new InvalidArgumentException("SQL reader returned {reader.VisibleFieldCount} fields when 1 was expected");
+                }
+
+                foreach (IDictionary<string, object> row in reader.GetRows())
+                {
+                    yield return row.Single().Value;
                 }
             }
         }
@@ -780,7 +776,7 @@ namespace Penguin.Persistence.Database
 
                 foreach (object o in dr.ItemArray)
                 {
-                    Values.Add(o is null || (EmptyStringAsNull && string.IsNullOrWhiteSpace(o.ToString())) ? "null" : $"'{o.ToString().Replace("'", "''")}'");
+                    Values.Add(o is null || EmptyStringAsNull && string.IsNullOrWhiteSpace(o.ToString()) ? "null" : $"'{o.ToString().Replace("'", "''")}'");
                 }
 
                 _ = CreateTableSrc.Append(string.Join(", ", Values));

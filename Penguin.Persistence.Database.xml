@@ -243,13 +243,13 @@
             <param name="query">The name of the procedure to execute</param>
             <returns>An IEnumerable of object representing the first value of each row </returns>
         </member>
-        <member name="M:Penguin.Persistence.Database.DatabaseInstance.ExecuteToList``1(System.String,System.String[])">
+        <member name="M:Penguin.Persistence.Database.DatabaseInstance.Enumerate``1(System.String,System.String[])">
             <summary>
             Executes a query to a List
             </summary>
             <returns>An IEnumerable of object representing the first value of each row </returns>
         </member>
-        <member name="M:Penguin.Persistence.Database.DatabaseInstance.ExecuteToList(System.String,System.String[])">
+        <member name="M:Penguin.Persistence.Database.DatabaseInstance.Enumerate(System.String,System.String[])">
             <summary>
             Executes a query to a List
             </summary>
