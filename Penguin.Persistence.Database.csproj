@@ -13,10 +13,10 @@
     <None Remove="Generate\StoredProcedures\Tools\_GetAllProcedures.sql" />
     <None Remove="Generate\StoredProcedures\Tools\_GetParamDefault.sql" />
     <None Remove="Scripts\TruncateDatabase.sql" />
-    <PackageReference Include="Penguin.Threading.BackgroundWorker" Version="5.0.6-TB0E36F" />
-    <PackageReference Include="Penguin.Debugging" Version="5.0.6-TB0E36F" />
-    <PackageReference Include="Penguin.Persistence.Abstractions" Version="5.0.6-TB0E36F" />
-    <PackageReference Include="Penguin.Reflection.Extensions" Version="5.0.6-TB0E36F" />
+    <PackageReference Include="Penguin.Threading.BackgroundWorker" Version="5.0.6-TB1ZEZV" />
+    <PackageReference Include="Penguin.Persistence.Abstractions" Version="5.0.6-TB1ZEZV" />
+    <PackageReference Include="Penguin.Reflection.Extensions" Version="5.0.6-TB1ZEZV" />
+    <PackageReference Include="Penguin.Debugging" Version="5.0.6-TB3XO8Q" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Generate\StoredProcedures\Tools\_GetAllProcedures.sql" />
