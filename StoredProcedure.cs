@@ -54,9 +54,9 @@ namespace Penguin.Persistence.Database
                 throw new ArgumentNullException(nameof(Script));
             }
 
-            this.ConnectionStrings = new List<string>();
+            ConnectionStrings = new List<string>();
 
-            this.Body = RemoveComments(Script).From("create procedure ", true, StringComparison.CurrentCultureIgnoreCase).ToLast("\nGO", false, StringComparison.CurrentCultureIgnoreCase).Trim();
+            Body = RemoveComments(Script).From("create procedure ", true, StringComparison.CurrentCultureIgnoreCase).ToLast("\nGO", false, StringComparison.CurrentCultureIgnoreCase).Trim();
 
             List<string> Commands = Script.Split('\n').Where(s => s.Trim().StartsWith("--@", StringComparison.OrdinalIgnoreCase)).Select(s => s.From("@")).ToList();
 
@@ -64,19 +64,19 @@ namespace Penguin.Persistence.Database
             {
                 if (Command.To(" ").ToLower(CultureInfo.CurrentCulture) == "using")
                 {
-                    this.ConnectionStrings.Add(Command.Trim().From(" ").Trim());
+                    ConnectionStrings.Add(Command.Trim().From(" ").Trim());
                 }
             }
 
             Script = RemoveComments(Script);
 
-            this.Name = Script.From("create procedure", false, StringComparison.CurrentCultureIgnoreCase).Trim().To(" ").To("\n").To("\r").Trim();
+            Name = Script.From("create procedure", false, StringComparison.CurrentCultureIgnoreCase).Trim().To(" ").To("\n").To("\r").Trim();
 
-            string ParametersSection = Script.From("create procedure", false, StringComparison.CurrentCultureIgnoreCase).Trim().From(this.Name).Trim();
+            string ParametersSection = Script.From("create procedure", false, StringComparison.CurrentCultureIgnoreCase).Trim().From(Name).Trim();
 
             string[] Chunks = ParametersSection.Split(',');
 
-            List<string> Parameters = new List<string>();
+            List<string> Parameters = new();
 
             foreach (string Parameter in Chunks)
             {
@@ -90,27 +90,27 @@ namespace Penguin.Persistence.Database
                 {
                     LastParameter = true;
 
-                    WorkingParameter = WorkingParameter.ToLower(CultureInfo.CurrentCulture).Substring(0, match.Index);
+                    WorkingParameter = WorkingParameter.ToLower(CultureInfo.CurrentCulture)[..match.Index];
 
                     if (string.IsNullOrWhiteSpace(WorkingParameter))
                     { break; }
                 }
 
-                SqlParameter thisParameter = new SqlParameter
+                SqlParameter thisParameter = new()
                 {
                     ParameterName = WorkingParameter.From("@").To(" ")
                 };
 
                 string ParameterTypeName = WorkingParameter.From("@").Trim().From(" ").Trim().To(" ");
 
-                if (ParameterTypeName.Contains("("))
+                if (ParameterTypeName.Contains('('))
                 {
                     ParameterTypeName = ParameterTypeName.To("(");
                 }
 
                 thisParameter.SqlDbType = Enum.GetValues(typeof(SqlDbType)).Cast<SqlDbType>().First(t => string.Equals(t.ToString(), ParameterTypeName, StringComparison.OrdinalIgnoreCase));
 
-                if (WorkingParameter.Contains("="))
+                if (WorkingParameter.Contains('='))
                 {
                     thisParameter.IsNullable = true;
                 }
@@ -133,11 +133,11 @@ namespace Penguin.Persistence.Database
 
             string parsedNewName = "[" + newName.Trim('[').Trim(']') + "]";
 
-            int NameIndex = this.Body.AllIndexesOf(this.Name).First(i => i > this.Body.IndexOf("create procedure ", StringComparison.OrdinalIgnoreCase));
+            int NameIndex = Body.AllIndexesOf(Name).First(i => i > Body.IndexOf("create procedure ", StringComparison.OrdinalIgnoreCase));
 
-            this.Body = this.Body[..NameIndex] + parsedNewName + this.Body.Substring(NameIndex + this.Name.Length);
+            Body = Body[..NameIndex] + parsedNewName + Body[(NameIndex + Name.Length)..];
 
-            this.Name = parsedNewName;
+            Name = parsedNewName;
         }
 
         private static string RemoveComments(string intext)

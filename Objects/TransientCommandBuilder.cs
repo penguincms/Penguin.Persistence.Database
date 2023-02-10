@@ -4,8 +4,8 @@
     {
         public TransientCommandBuilder(string connectionString, int timeout)
         {
-            this.ConnectionString = connectionString;
-            this.CommandTimeout = timeout;
+            ConnectionString = connectionString;
+            CommandTimeout = timeout;
         }
 
         public int CommandTimeout { get; private set; }
@@ -13,7 +13,7 @@
 
         public TransientCommand Build(string Query, params object[] args)
         {
-            return TransientCommand.Build(Query, this.ConnectionString, this.CommandTimeout, args);
+            return TransientCommand.Build(Query, ConnectionString, CommandTimeout, args);
         }
     }
 }

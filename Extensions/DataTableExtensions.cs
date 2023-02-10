@@ -30,7 +30,7 @@ namespace Penguin.Persistence.Database.Extensions
                 throw new ArgumentNullException(nameof(dt));
             }
 
-            List<T> toReturn = new List<T>();
+            List<T> toReturn = new();
 
             foreach (DataRow dr in dt.Rows)
             {
@@ -58,15 +58,11 @@ namespace Penguin.Persistence.Database.Extensions
         /// <returns></returns>
         public static T GetSingle<T>(this DataTable dt, bool IgnoreCase = false)
         {
-            if (dt is null)
-            {
-                throw new ArgumentNullException(nameof(dt));
-            }
-
-            if (dt.Rows.Count > 1 || dt.Columns.Count > 1)
-            { throw new Exception(TOO_MANY_RESULTS_MESSAGE); }
-
-            return dt.Rows[0][0].ToString().Convert<T>(IgnoreCase);
+            return dt is null
+                ? throw new ArgumentNullException(nameof(dt))
+                : dt.Rows.Count > 1 || dt.Columns.Count > 1
+                ? throw new Exception(TOO_MANY_RESULTS_MESSAGE)
+                : dt.Rows[0][0].ToString().Convert<T>(IgnoreCase);
         }
 
         /// <summary>
@@ -82,13 +78,13 @@ namespace Penguin.Persistence.Database.Extensions
                 throw new ArgumentNullException(nameof(objList));
             }
 
-            DataTable thisTable = new DataTable();
+            DataTable thisTable = new();
 
             Type objectType = objList.GetType().GenericTypeArguments[0];
 
-            List<PropertyInfo> Properties = new List<PropertyInfo>();
+            List<PropertyInfo> Properties = new();
 
-            Dictionary<PropertyInfo, int> PropertyOrder = new Dictionary<PropertyInfo, int>();
+            Dictionary<PropertyInfo, int> PropertyOrder = new();
 
             foreach (PropertyInfo thisProp in objectType.GetProperties().Reverse())
             {
@@ -119,16 +115,7 @@ namespace Penguin.Persistence.Database.Extensions
             foreach (PropertyInfo thisProperty in Properties)
             {
                 DisplayNameAttribute displayNameAttribute = thisProperty.GetCustomAttribute<DisplayNameAttribute>();
-                string DisplayName;
-                if (displayNameAttribute != null)
-                {
-                    DisplayName = displayNameAttribute.DisplayName;
-                }
-                else
-                {
-                    DisplayName = thisProperty.Name;
-                }
-
+                string DisplayName = displayNameAttribute != null ? displayNameAttribute.DisplayName : thisProperty.Name;
                 _ = thisTable.Columns.Add(DisplayName);
             }
 
@@ -156,17 +143,9 @@ namespace Penguin.Persistence.Database.Extensions
         /// <returns>A casted representation of the requested value</returns>
         public static T Value<T>(this DataRow dr, string ColumnName, bool IgnoreCase = false)
         {
-            if (dr is null)
-            {
-                throw new ArgumentNullException(nameof(dr));
-            }
-
-            if (dr[ColumnName] is null)
-            {
-                return default;
-            }
-
-            return dr[ColumnName].ToString().Convert<T>(IgnoreCase);
+            return dr is null
+                ? throw new ArgumentNullException(nameof(dr))
+                : dr[ColumnName] is null ? default : dr[ColumnName].ToString().Convert<T>(IgnoreCase);
         }
     }
 }

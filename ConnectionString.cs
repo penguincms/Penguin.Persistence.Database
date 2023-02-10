@@ -25,7 +25,7 @@ namespace Penguin.Persistence.Database
             /// <summary>
             /// Whether or not the connection attempt was successfull
             /// </summary>
-            public bool Success => this.Error == null;
+            public bool Success => Error == null;
 
             internal TestResult()
             {
@@ -33,7 +33,7 @@ namespace Penguin.Persistence.Database
 
             internal TestResult(Exception ex)
             {
-                this.Error = ex;
+                Error = ex;
             }
         }
 
@@ -48,22 +48,22 @@ namespace Penguin.Persistence.Database
         /// <summary>
         /// The database name for the connection string
         /// </summary>
-        public string Database => this.GetAliasedValue(databaseAliases);
+        public string Database => GetAliasedValue(databaseAliases);
 
         /// <summary>
         /// The data source (or server) name for the connection string
         /// </summary>
-        public string DataSource => this.GetAliasedValue(serverAliases);
+        public string DataSource => GetAliasedValue(serverAliases);
 
         /// <summary>
         /// The password used to access this data source
         /// </summary>
-        public string Password => this.GetAliasedValue(passwordAliases);
+        public string Password => GetAliasedValue(passwordAliases);
 
         /// <summary>
         /// The user name used to access this data source
         /// </summary>
-        public string UserName => this.GetAliasedValue(usernameAliases);
+        public string UserName => GetAliasedValue(usernameAliases);
 
         private string connectionString { get; set; }
 
@@ -75,8 +75,8 @@ namespace Penguin.Persistence.Database
         /// <param name="connectionStringToTest">The connection string to be parsed</param>
         public ConnectionString(string connectionStringToTest)
         {
-            this.connectionString = connectionStringToTest ?? throw new ArgumentNullException(nameof(connectionStringToTest));
-            this.ConnectionStringDictionary = connectionStringToTest.Split(';')
+            connectionString = connectionStringToTest ?? throw new ArgumentNullException(nameof(connectionStringToTest));
+            ConnectionStringDictionary = connectionStringToTest.Split(';')
                                          .Where(kvp => kvp.Contains('='))
                                          .Select(kvp => kvp.Split(new char[] { '=' }, 2))
                                          .ToDictionary(kvp => kvp[0].Trim(),
@@ -91,17 +91,17 @@ namespace Penguin.Persistence.Database
         /// <returns>A list of connection string objects found in the file</returns>
         public static List<ConnectionString> FromFile(string FilePath)
         {
-            List<ConnectionString> toReturn = new List<ConnectionString>();
+            List<ConnectionString> toReturn = new();
 
             string FileContents = File.ReadAllText(FilePath);
 
-            Regex connectionString = new Regex("(?i)ConnectionString=\"(.*?)\"");
+            Regex connectionString = new("(?i)ConnectionString=\"(.*?)\"");
 
             foreach (Match ThisMatch in connectionString.Matches(FileContents))
             {
                 foreach (Group thisGroup in ThisMatch.Groups)
                 {
-                    if (!thisGroup.Value.Contains("\""))
+                    if (!thisGroup.Value.Contains('"'))
                     {
                         toReturn.Add(new ConnectionString(thisGroup.Value));
                     }
@@ -120,13 +120,11 @@ namespace Penguin.Persistence.Database
         {
             try
             {
-                using (SqlConnection con = new SqlConnection(connectionStringToTest))
-                {
-                    con.Open();
-                    con.Close();
+                using SqlConnection con = new(connectionStringToTest);
+                con.Open();
+                con.Close();
 
-                    return new TestResult();
-                }
+                return new TestResult();
             }
             catch (Exception ex)
             {
@@ -140,16 +138,16 @@ namespace Penguin.Persistence.Database
         /// <returns></returns>
         public TestResult Test()
         {
-            return Test(this.connectionString);
+            return Test(connectionString);
         }
 
         private string GetAliasedValue(string[] aliases)
         {
             for (int i = 0; i < aliases.Length; i++)
             {
-                if (this.ConnectionStringDictionary.ContainsKey(aliases[i]))
+                if (ConnectionStringDictionary.TryGetValue(aliases[i], out string value))
                 {
-                    return this.ConnectionStringDictionary[aliases[i]];
+                    return value;
                 }
             }
             return string.Empty;

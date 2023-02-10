@@ -17,7 +17,7 @@ namespace Penguin.Persistence.Database.Extensions
 
             DataTable schemaTable = reader.GetSchemaTable();
 
-            List<string> Columns = new List<string>();
+            List<string> Columns = new();
 
             DataColumn ColumnNameColumn = schemaTable.Columns.Cast<DataColumn>().Single(dc => dc.ColumnName == nameof(DataColumn.ColumnName));
 
@@ -30,7 +30,7 @@ namespace Penguin.Persistence.Database.Extensions
             {
                 while (reader.Read())
                 {
-                    Dictionary<string, object> itemArray = new Dictionary<string, object>();
+                    Dictionary<string, object> itemArray = new();
 
                     for (int ci = 0; ci < Columns.Count; ci++)
                     {

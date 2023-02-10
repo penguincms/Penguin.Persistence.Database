@@ -14,10 +14,8 @@ namespace Penguin.Persistence.Database.Helpers
 
             using (Stream stream = assembly.GetManifestResourceStream(resourceName))
             {
-                using (StreamReader reader = new StreamReader(stream))
-                {
-                    result = reader.ReadToEnd();
-                }
+                using StreamReader reader = new(stream);
+                result = reader.ReadToEnd();
             }
 
             return result;

@@ -10,9 +10,9 @@
 
         public AsyncSqlCommand(string text, double progress, int commandNumber)
         {
-            this.Text = text;
-            this.Progress = progress;
-            this.CommandNumber = commandNumber;
+            Text = text;
+            Progress = progress;
+            CommandNumber = commandNumber;
         }
     }
 }

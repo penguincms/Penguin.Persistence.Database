@@ -15,7 +15,7 @@ namespace Penguin.Persistence.Database
 
         private const string UNSUPPORTED_TYPE_MESSAGE = "Referenced an unsupported Type";
 
-        private static readonly ArrayList _DbTypeList = new ArrayList();
+        private static readonly ArrayList _DbTypeList = new();
 
         private struct DbTypeMapEntry
         {
@@ -25,16 +25,16 @@ namespace Penguin.Persistence.Database
 
             public DbTypeMapEntry(Type type, DbType dbType, SqlDbType sqlDbType)
             {
-                this.Type = type;
-                this.DbType = dbType;
-                this.SqlDbType = sqlDbType;
+                Type = type;
+                DbType = dbType;
+                SqlDbType = sqlDbType;
             }
         };
 
         static TypeConverter()
         {
             DbTypeMapEntry dbTypeMapEntry
-            = new DbTypeMapEntry(typeof(bool), DbType.Boolean, SqlDbType.Bit);
+            = new(typeof(bool), DbType.Boolean, SqlDbType.Bit);
             _ = _DbTypeList.Add(dbTypeMapEntry);
 
             dbTypeMapEntry
@@ -168,13 +168,10 @@ namespace Penguin.Persistence.Database
                     break;
                 }
             }
-            if (retObj == null)
-            {
-                throw
-                new ApplicationException(UNSUPPORTED_TYPE_MESSAGE + $": {type}");
-            }
-
-            return (DbTypeMapEntry)retObj;
+            return retObj == null
+                ? throw
+                new ApplicationException(UNSUPPORTED_TYPE_MESSAGE + $": {type}")
+                : (DbTypeMapEntry)retObj;
         }
 
         private static DbTypeMapEntry Find(DbType dbType)
@@ -189,13 +186,10 @@ namespace Penguin.Persistence.Database
                     break;
                 }
             }
-            if (retObj == null)
-            {
-                throw
-                new ApplicationException(UNSUPPORTED_DB_TYPE_MESSAGE + $": {dbType}");
-            }
-
-            return (DbTypeMapEntry)retObj;
+            return retObj == null
+                ? throw
+                new ApplicationException(UNSUPPORTED_DB_TYPE_MESSAGE + $": {dbType}")
+                : (DbTypeMapEntry)retObj;
         }
 
         private static DbTypeMapEntry Find(SqlDbType sqlDbType)
@@ -210,13 +204,10 @@ namespace Penguin.Persistence.Database
                     break;
                 }
             }
-            if (retObj == null)
-            {
-                throw
-                new ApplicationException(UNSUPPORTED_SQL_TYPE_MESSAGE + $": {sqlDbType}");
-            }
-
-            return (DbTypeMapEntry)retObj;
+            return retObj == null
+                ? throw
+                new ApplicationException(UNSUPPORTED_SQL_TYPE_MESSAGE + $": {sqlDbType}")
+                : (DbTypeMapEntry)retObj;
         }
     }
 }

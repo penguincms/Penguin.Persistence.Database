@@ -113,6 +113,7 @@
             </summary>
             <param name="ConnectionString">The database connection string</param>
             <param name="FileName">The file to output the data to</param>
+            <param name="Compress"></param>
         </member>
         <member name="M:Penguin.Persistence.Database.DatabaseInstance.FormatProcedure(System.String)">
             <summary>
@@ -132,7 +133,10 @@
             Truncates the database and runs the SQL file at the provided path against the current database
             </summary>
             <param name="FileName">The file name to run</param>
+            <param name="ConnectionString"></param>
+            <param name="CommandTimeout"></param>
             <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
+            <param name="encoding"></param>
         </member>
         <member name="M:Penguin.Persistence.Database.DatabaseInstance.Transfer(System.String,System.String)">
             <summary>
@@ -323,6 +327,7 @@
             </summary>
             <param name="FileName">The file name to run</param>
             <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
+            <param name="encoding"></param>
         </member>
         <member name="M:Penguin.Persistence.Database.DatabaseInstance.TableCount(System.String)">
             <summary>

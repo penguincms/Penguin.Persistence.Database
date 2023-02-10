@@ -14,12 +14,12 @@ namespace Penguin.Persistence.Database.Objects
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1024:Use properties where appropriate", Justification = "<Pending>")]
         public SqlDataAdapter GetDataAdapter()
         {
-            return new SqlDataAdapter(this.Command);
+            return new SqlDataAdapter(Command);
         }
 
         public SqlDataReader GetReader()
         {
-            return this.Command.ExecuteReader();
+            return Command.ExecuteReader();
         }
 
         public static TransientCommand Build(string Query, string ConnectionString, int CommandTimeout, params object[] args)
@@ -29,12 +29,12 @@ namespace Penguin.Persistence.Database.Objects
                 throw new ArgumentNullException(nameof(args));
             }
 
-            SqlConnection conn = new SqlConnection(ConnectionString);
-            SqlCommand command = new SqlCommand(Query, conn);
+            SqlConnection conn = new(ConnectionString);
+            SqlCommand command = new(Query, conn);
 
             for (int i = 0; i < args.Length; i++)
             {
-                SqlParameter param = new SqlParameter($"@{i}", args[i]);
+                SqlParameter param = new($"@{i}", args[i]);
 
                 _ = command.Parameters.Add(param);
             }
@@ -52,16 +52,16 @@ namespace Penguin.Persistence.Database.Objects
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!this.disposedValue)
+            if (!disposedValue)
             {
                 if (disposing)
                 {
-                    this.Connection.Close();
+                    Connection.Close();
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer
                 // TODO: set large fields to null
-                this.disposedValue = true;
+                disposedValue = true;
             }
         }
 
@@ -75,7 +75,7 @@ namespace Penguin.Persistence.Database.Objects
         public void Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            this.Dispose(disposing: true);
+            Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
     }

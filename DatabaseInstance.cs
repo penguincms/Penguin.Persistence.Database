@@ -42,9 +42,9 @@ namespace Penguin.Persistence.Database
         /// <param name="commandTimeout">The global command timeout</param>
         public DatabaseInstance(string connectionString, int commandTimeout = 300)
         {
-            this.ConnectionString = connectionString;
-            this.CommandTimeout = commandTimeout;
-            this.CommandBuilder = new TransientCommandBuilder(connectionString, commandTimeout);
+            ConnectionString = connectionString;
+            CommandTimeout = commandTimeout;
+            CommandBuilder = new TransientCommandBuilder(connectionString, commandTimeout);
         }
 
         public DatabaseInstance(string server, string database, int commandTimeout = 300) : this($"Server={server};Database={database};Trusted_Connection=True;", commandTimeout)
@@ -60,9 +60,10 @@ namespace Penguin.Persistence.Database
         /// </summary>
         /// <param name="ConnectionString">The database connection string</param>
         /// <param name="FileName">The file to output the data to</param>
+        /// <param name="Compress"></param>
         public static void Backup(string ConnectionString, string FileName, bool Compress = false)
         {
-            ConnectionString connection = new ConnectionString(ConnectionString);
+            ConnectionString connection = new(ConnectionString);
 
             Console.WriteLine($"Starting backup of {connection.DataSource}\\{connection.Database}...");
 
@@ -98,12 +99,9 @@ namespace Penguin.Persistence.Database
         /// <param name="ProdecureName">The name of the procedure to format</param>
         public static string FormatProcedure(string ProdecureName)
         {
-            if (ProdecureName is null)
-            {
-                throw new ArgumentNullException(nameof(ProdecureName));
-            }
-
-            return "[" + ProdecureName.Trim('[').Trim(']') + "]";
+            return ProdecureName is null
+                ? throw new ArgumentNullException(nameof(ProdecureName))
+                : "[" + ProdecureName.Trim('[').Trim(']') + "]";
         }
 
         /// <summary>
@@ -128,7 +126,7 @@ namespace Penguin.Persistence.Database
                 type = Nullable.GetUnderlyingType(type);
             }
 
-            SqlParameter param = new SqlParameter("", Activator.CreateInstance(type));
+            SqlParameter param = new("", Activator.CreateInstance(type));
             return param.SqlDbType;
         }
 
@@ -136,13 +134,16 @@ namespace Penguin.Persistence.Database
         /// Truncates the database and runs the SQL file at the provided path against the current database
         /// </summary>
         /// <param name="FileName">The file name to run</param>
+        /// <param name="ConnectionString"></param>
+        /// <param name="CommandTimeout"></param>
         /// <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
+        /// <param name="encoding"></param>
         public static async Task Restore(string FileName, string ConnectionString, int CommandTimeout = 300, string SplitOn = ScriptHelpers.DEFAULT_SPLIT, Encoding encoding = null)
         {
-            encoding = encoding ?? Encoding.Default;
+            encoding ??= Encoding.Default;
 
             TruncateDatabase(ConnectionString);
-            await ScriptHelpers.RunSplitScript(FileName, ConnectionString, CommandTimeout, SplitOn, encoding);
+            await ScriptHelpers.RunSplitScript(FileName, ConnectionString, CommandTimeout, SplitOn, encoding).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -150,8 +151,8 @@ namespace Penguin.Persistence.Database
         /// </summary>
         public static void Transfer(string SourceConnectionString, string DestinationConnection)
         {
-            ConnectionString sourceConnection = new ConnectionString(SourceConnectionString);
-            ConnectionString destConnection = new ConnectionString(DestinationConnection);
+            ConnectionString sourceConnection = new(SourceConnectionString);
+            ConnectionString destConnection = new(DestinationConnection);
 
             Console.WriteLine($"Starting backup of {sourceConnection.DataSource}\\{sourceConnection.Database}...");
 
@@ -181,23 +182,21 @@ namespace Penguin.Persistence.Database
         public static void TruncateDatabase(string ConnectionString)
         {
             StaticLogger.Log("Truncating database...");
-            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            using (SqlConnection connection = new(ConnectionString))
             {
                 connection.Open();
 
                 // Create the command and set its properties.
-                using (SqlCommand command = new SqlCommand
+                using SqlCommand command = new()
                 {
                     Connection = connection,
                     CommandText = ResourceHelper.ReadEmbeddedScript("TruncateDatabase.sql"),
                     CommandType = CommandType.Text,
                     CommandTimeout = 600000
-                })
-                {
-                    // Open the connection and execute the reader.
+                };
+                // Open the connection and execute the reader.
 
-                    _ = command.ExecuteNonQuery();
-                }
+                _ = command.ExecuteNonQuery();
             }
             StaticLogger.Log("Truncating Complete.");
         }
@@ -224,7 +223,7 @@ namespace Penguin.Persistence.Database
 
         public void Backup(string FileName, bool Compress = false)
         {
-            Backup(this.ConnectionString, FileName, Compress);
+            Backup(ConnectionString, FileName, Compress);
         }
 
         /// <summary>
@@ -235,7 +234,7 @@ namespace Penguin.Persistence.Database
         {
             string query = $"IF EXISTS ( SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'{ProcedureName}') AND type IN ( N'P', N'PC' ) ) BEGIN DROP PROCEDURE {FormatProcedure(ProcedureName)} END";
 
-            this.ExecuteSingleQuery(query);
+            ExecuteSingleQuery(query);
         }
 
         /// <summary>
@@ -244,7 +243,7 @@ namespace Penguin.Persistence.Database
         /// <param name="TableName">The name of the table to drop</param>
         public void DropTable(string TableName)
         {
-            this.ExecuteSingleQuery($"Drop table [{TableName}]");
+            ExecuteSingleQuery($"Drop table [{TableName}]");
         }
 
         /// <summary>
@@ -262,17 +261,17 @@ namespace Penguin.Persistence.Database
 
             int affectedRows;
 
-            SqlConnection conn = new SqlConnection(this.ConnectionString);
-            using (SqlCommand command = new SqlCommand(Query, conn))
+            SqlConnection conn = new(ConnectionString);
+            using (SqlCommand command = new(Query, conn))
             {
                 for (int i = 0; i < args.Length; i++)
                 {
-                    SqlParameter param = new SqlParameter($"@{i}", args[i]);
+                    SqlParameter param = new($"@{i}", args[i]);
 
                     _ = command.Parameters.Add(param);
                 }
 
-                command.CommandTimeout = this.CommandTimeout;
+                command.CommandTimeout = CommandTimeout;
 
                 conn.Open();
 
@@ -295,9 +294,9 @@ namespace Penguin.Persistence.Database
         /// <param name="bufferSize">The buffer size for the stream reader</param>
         public async Task ExecuteScript(string FileName, string SplitOn = ScriptHelpers.DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = -1)
         {
-            encoding = encoding ?? Encoding.Default;
+            encoding ??= Encoding.Default;
 
-            await ScriptHelpers.RunSplitScript(FileName, this.ConnectionString, this.CommandTimeout, SplitOn, encoding, detectEncodingFromByteOrderMarks, bufferSize);
+            await ScriptHelpers.RunSplitScript(FileName, ConnectionString, CommandTimeout, SplitOn, encoding, detectEncodingFromByteOrderMarks, bufferSize).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -307,15 +306,11 @@ namespace Penguin.Persistence.Database
 
         public void ExecuteStoredProcedure(string ProcedureName)
         {
-            using (SqlConnection conn = new SqlConnection(this.ConnectionString))
-            {
-                using (SqlCommand command = new SqlCommand(ProcedureName, conn) { CommandType = CommandType.StoredProcedure })
-                {
-                    command.CommandTimeout = this.CommandTimeout;
-                    conn.Open();
-                    _ = command.ExecuteNonQuery();
-                }
-            }
+            using SqlConnection conn = new(ConnectionString);
+            using SqlCommand command = new(ProcedureName, conn) { CommandType = CommandType.StoredProcedure };
+            command.CommandTimeout = CommandTimeout;
+            conn.Open();
+            _ = command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -326,7 +321,7 @@ namespace Penguin.Persistence.Database
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
         public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params string[] parameters)
         {
-            foreach (object o in this.ExecuteStoredProcedureToList(ProcedureName, parameters))
+            foreach (object o in ExecuteStoredProcedureToList(ProcedureName, parameters))
             {
                 yield return o.ToString().Convert<T>();
             }
@@ -340,12 +335,10 @@ namespace Penguin.Persistence.Database
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
         public IEnumerable<object> ExecuteStoredProcedureToList(string ProcedureName, params string[] parameters)
         {
-            using (DataTable dt = this.ExecuteStoredProcedureToTable(ProcedureName, parameters))
+            using DataTable dt = ExecuteStoredProcedureToTable(ProcedureName, parameters);
+            foreach (DataRow dr in dt.Rows)
             {
-                foreach (DataRow dr in dt.Rows)
-                {
-                    yield return dr[0];
-                }
+                yield return dr[0];
             }
         }
 
@@ -357,7 +350,7 @@ namespace Penguin.Persistence.Database
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
         public IEnumerable<T> ExecuteStoredProcedureToList<T>(string ProcedureName, params object[] parameters)
         {
-            return this.ExecuteStoredProcedureToList<T>(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
+            return ExecuteStoredProcedureToList<T>(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
         }
 
         /// <summary>
@@ -368,7 +361,7 @@ namespace Penguin.Persistence.Database
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
         public IEnumerable<object> ExecuteStoredProcedureToList(string ProcedureName, params object[] parameters)
         {
-            return this.ExecuteStoredProcedureToList(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
+            return ExecuteStoredProcedureToList(ProcedureName, parameters.Select(s => s?.ToString()).ToArray());
         }
 
         /// <summary>
@@ -380,30 +373,28 @@ namespace Penguin.Persistence.Database
 
         public DataTable ExecuteStoredProcedureToTable(string ProcedureName, params string[] parameters)
         {
-            using (SqlConnection conn = new SqlConnection(this.ConnectionString))
+            using SqlConnection conn = new(ConnectionString);
+            conn.Open();
+            DataTable dt = new();
+
+            using (SqlCommand cmd = new(ProcedureName, conn))
             {
-                conn.Open();
-                DataTable dt = new DataTable();
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = CommandTimeout;
 
-                using (SqlCommand cmd = new SqlCommand(ProcedureName, conn))
+                foreach (SqlParameter parameter in FormatSqlParameters(ProcedureName, parameters))
                 {
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.CommandTimeout = this.CommandTimeout;
-
-                    foreach (SqlParameter parameter in this.FormatSqlParameters(ProcedureName, parameters))
-                    {
-                        _ = cmd.Parameters.Add(parameter);
-                    }
-
-                    // create data adapter
-                    SqlDataAdapter da = new SqlDataAdapter(cmd);
-                    // this will query your database and return the result to your datatable
-                    _ = da.Fill(dt);
-                    conn.Close();
-                    da.Dispose();
+                    _ = cmd.Parameters.Add(parameter);
                 }
-                return dt;
+
+                // create data adapter
+                SqlDataAdapter da = new(cmd);
+                // this will query your database and return the result to your datatable
+                _ = da.Fill(dt);
+                conn.Close();
+                da.Dispose();
             }
+            return dt;
         }
 
         /// <summary>
@@ -425,32 +416,30 @@ namespace Penguin.Persistence.Database
                 throw new ArgumentNullException(nameof(parameters));
             }
 
-            this.FormatSqlParameters(ProcedureName, parameters);
+            FormatSqlParameters(ProcedureName, parameters);
 
-            using (SqlConnection conn = new SqlConnection(this.ConnectionString))
+            using SqlConnection conn = new(ConnectionString);
+            conn.Open();
+            DataTable dt = new();
+
+            using (SqlCommand cmd = new(ProcedureName, conn))
             {
-                conn.Open();
-                DataTable dt = new DataTable();
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = CommandTimeout;
 
-                using (SqlCommand cmd = new SqlCommand(ProcedureName, conn))
+                foreach (SqlParameter parameter in parameters)
                 {
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.CommandTimeout = this.CommandTimeout;
-
-                    foreach (SqlParameter parameter in parameters)
-                    {
-                        _ = cmd.Parameters.Add(parameter);
-                    }
-
-                    // create data adapter
-                    SqlDataAdapter da = new SqlDataAdapter(cmd);
-                    // this will query your database and return the result to your datatable
-                    _ = da.Fill(dt);
-                    conn.Close();
-                    da.Dispose();
+                    _ = cmd.Parameters.Add(parameter);
                 }
-                return dt;
+
+                // create data adapter
+                SqlDataAdapter da = new(cmd);
+                // this will query your database and return the result to your datatable
+                _ = da.Fill(dt);
+                conn.Close();
+                da.Dispose();
             }
+            return dt;
         }
 
         /// <summary>
@@ -461,25 +450,23 @@ namespace Penguin.Persistence.Database
         /// <returns>A dictionary representing the result of the query</returns>
         public Dictionary<string, string> ExecuteToDictionary(string Query, params object[] args)
         {
-            using (DataTable dt = this.ExecuteToTable(Query, args))
+            using DataTable dt = ExecuteToTable(Query, args);
+            Dictionary<string, string> toReturn = new();
+
+            if (dt.Rows.Count > 1)
             {
-                Dictionary<string, string> toReturn = new Dictionary<string, string>();
-
-                if (dt.Rows.Count > 1)
-                {
-                    throw new Exception(MULTIPLE_ROWS_MESSAGE);
-                }
-                else if (dt.Rows.Count == 1)
-                {
-                    foreach (DataColumn dataColumn in dt.Columns)
-                    {
-                        object val = dt.Rows[0][dataColumn];
-
-                        toReturn.Add(dataColumn.ColumnName, val?.ToString());
-                    }
-                }
-                return toReturn;
+                throw new Exception(MULTIPLE_ROWS_MESSAGE);
             }
+            else if (dt.Rows.Count == 1)
+            {
+                foreach (DataColumn dataColumn in dt.Columns)
+                {
+                    object val = dt.Rows[0][dataColumn];
+
+                    toReturn.Add(dataColumn.ColumnName, val?.ToString());
+                }
+            }
+            return toReturn;
         }
 
         /// <summary>
@@ -519,45 +506,43 @@ namespace Penguin.Persistence.Database
                 throw new Exception("No parameterless constructor defined");
             }
 
-            using (TransientCommand Command = this.CommandBuilder.Build(query))
+            using TransientCommand Command = CommandBuilder.Build(query);
+            foreach (IDictionary<string, object> row in Command.GetReader().GetRows())
             {
-                foreach (IDictionary<string, object> row in Command.GetReader().GetRows())
+                Dictionary<string, object> newObjDict = new(StringComparer.OrdinalIgnoreCase);
+
+                foreach (string cName in row.Keys)
                 {
-                    Dictionary<string, object> newObjDict = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-
-                    foreach (string cName in row.Keys)
+                    if (cachedProps.TryGetValue(cName, out PropertyInfo pi))
                     {
-                        if (cachedProps.TryGetValue(cName, out PropertyInfo pi))
-                        {
-                            newObjDict.Add(cName, row[cName]);
-                        }
+                        newObjDict.Add(cName, row[cName]);
                     }
-
-                    List<object> parameters = new List<object>();
-
-                    foreach (ParameterInfo pi in chosenConstructor.GetParameters())
-                    {
-                        parameters.Add(newObjDict[pi.Name]);
-                        _ = newObjDict.Remove(pi.Name);
-                    }
-
-                    T toReturn = Activator.CreateInstance(typeof(T), parameters.ToArray()) as T;
-
-                    foreach (PropertyInfo pi in cachedProps.Select(v => v.Value))
-                    {
-                        if (newObjDict.TryGetValue(pi.Name, out object val) && !(val is DBNull))
-                        {
-                            if (val is string sv && pi.PropertyType != typeof(string))
-                            {
-                                val = sv.Convert(pi.PropertyType);
-                            }
-
-                            pi.SetValue(toReturn, val);
-                        }
-                    }
-
-                    yield return toReturn;
                 }
+
+                List<object> parameters = new();
+
+                foreach (ParameterInfo pi in chosenConstructor.GetParameters())
+                {
+                    parameters.Add(newObjDict[pi.Name]);
+                    _ = newObjDict.Remove(pi.Name);
+                }
+
+                T toReturn = Activator.CreateInstance(typeof(T), parameters.ToArray()) as T;
+
+                foreach (PropertyInfo pi in cachedProps.Select(v => v.Value))
+                {
+                    if (newObjDict.TryGetValue(pi.Name, out object val) && val is not DBNull)
+                    {
+                        if (val is string sv && pi.PropertyType != typeof(string))
+                        {
+                            val = sv.Convert(pi.PropertyType);
+                        }
+
+                        pi.SetValue(toReturn, val);
+                    }
+                }
+
+                yield return toReturn;
             }
         }
 
@@ -567,16 +552,9 @@ namespace Penguin.Persistence.Database
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
         public IEnumerable<T> Enumerate<T>(string query, params string[] args)
         {
-            foreach (object o in this.Enumerate(query, args))
+            foreach (object o in Enumerate(query, args))
             {
-                if (o is T t)
-                {
-                    yield return t;
-                }
-                else
-                {
-                    yield return o.ToString().Convert<T>();
-                }
+                yield return o is T t ? t : o.ToString().Convert<T>();
             }
         }
 
@@ -586,19 +564,17 @@ namespace Penguin.Persistence.Database
         /// <returns>An IEnumerable of object representing the first value of each row </returns>
         public IEnumerable<object> Enumerate(string query, params string[] args)
         {
-            using (TransientCommand Command = this.CommandBuilder.Build(query, args))
-            {
-                SqlDataReader reader = Command.GetReader();
-                
-                if(reader.VisibleFieldCount > 1)
-                {
-                    throw new InvalidArgumentException("SQL reader returned {reader.VisibleFieldCount} fields when 1 was expected");
-                }
+            using TransientCommand Command = CommandBuilder.Build(query, args);
+            SqlDataReader reader = Command.GetReader();
 
-                foreach (IDictionary<string, object> row in reader.GetRows())
-                {
-                    yield return row.Single().Value;
-                }
+            if (reader.VisibleFieldCount > 1)
+            {
+                throw new InvalidArgumentException("SQL reader returned {reader.VisibleFieldCount} fields when 1 was expected");
+            }
+
+            foreach (IDictionary<string, object> row in reader.GetRows())
+            {
+                yield return row.Single().Value;
             }
         }
 
@@ -612,17 +588,15 @@ namespace Penguin.Persistence.Database
 
         public DataTable ExecuteToTable(string Query, params object[] args)
         {
-            using (TransientCommand command = this.CommandBuilder.Build(Query, args))
+            using TransientCommand command = CommandBuilder.Build(Query, args);
+            DataTable dt = new();
+
+            using (SqlDataAdapter da = command.GetDataAdapter())
             {
-                DataTable dt = new DataTable();
-
-                using (SqlDataAdapter da = command.GetDataAdapter())
-                {
-                    _ = da.Fill(dt);
-                }
-
-                return dt;
+                _ = da.Fill(dt);
             }
+
+            return dt;
         }
 
         /// <summary>
@@ -639,7 +613,7 @@ namespace Penguin.Persistence.Database
                 throw new ArgumentNullException(nameof(parameters));
             }
 
-            List<SQLParameterInfo> procParams = this.GetParameters(ProdecureName);
+            List<SQLParameterInfo> procParams = GetParameters(ProdecureName);
 
             foreach (SqlParameter sqlParameter in parameters)
             {
@@ -656,7 +630,7 @@ namespace Penguin.Persistence.Database
         /// <param name="parameters">The parameter string list to ensure compatability</param>
         public IEnumerable<SqlParameter> FormatSqlParameters(string ProdecureName, IEnumerable<string> parameters)
         {
-            List<SQLParameterInfo> procParams = this.GetParameters(ProdecureName);
+            List<SQLParameterInfo> procParams = GetParameters(ProdecureName);
 
             for (int i = 0; i < parameters.Count(); i++)
             {
@@ -678,23 +652,21 @@ namespace Penguin.Persistence.Database
         /// <returns>A List of SQLParameterInfo representing the parameter information</returns>
         public List<SQLParameterInfo> GetParameters(string Name)
         {
-            using (DataTable dt = this.ExecuteToTable("select * from information_schema.parameters where SPECIFIC_NAME = @0", Name))
+            using DataTable dt = ExecuteToTable("select * from information_schema.parameters where SPECIFIC_NAME = @0", Name);
+            List<SQLParameterInfo> parameters = new();
+
+            foreach (DataRow dr in dt.Rows)
             {
-                List<SQLParameterInfo> parameters = new List<SQLParameterInfo>();
-
-                foreach (DataRow dr in dt.Rows)
+                SQLParameterInfo thisParam = new(dr);
+                using (DataTable dti = ExecuteToTable("exec [Tools\\_GetParamDefault] @0, @1", Name, thisParam.PARAMETER_NAME))
                 {
-                    SQLParameterInfo thisParam = new SQLParameterInfo(dr);
-                    using (DataTable dti = this.ExecuteToTable("exec [Tools\\_GetParamDefault] @0, @1", Name, thisParam.PARAMETER_NAME))
-                    {
-                        thisParam.DEFAULT = dti.GetSingle<string>().Trim('\'');
-                    }
-
-                    parameters.Add(thisParam);
+                    thisParam.DEFAULT = dti.GetSingle<string>().Trim('\'');
                 }
 
-                return parameters.OrderBy(p => p.ORDINAL_POSITION).ToList();
+                parameters.Add(thisParam);
             }
+
+            return parameters.OrderBy(p => p.ORDINAL_POSITION).ToList();
         }
 
         /// <summary>
@@ -703,10 +675,8 @@ namespace Penguin.Persistence.Database
         /// <returns>A list of all the stored procedures in the database</returns>
         public List<string> GetStoredProcedures()
         {
-            using (DataTable dt = this.ExecuteToTable("select * from sys.procedures"))
-            {
-                return dt.All<string>("name");
-            }
+            using DataTable dt = ExecuteToTable("select * from sys.procedures");
+            return dt.All<string>("name");
         }
 
         /// <summary>
@@ -718,15 +688,8 @@ namespace Penguin.Persistence.Database
         /// <returns>The [0][0] result converted to the requested type</returns>
         public T GetValue<T>(string Query, params object[] args)
         {
-            using (DataTable dt = this.ExecuteToTable(Query, args))
-            {
-                if (dt.Rows == null || dt.Rows.Count == 0)
-                {
-                    return default;
-                }
-
-                return dt.Rows[0][0].ToString().Convert<T>();
-            }
+            using DataTable dt = ExecuteToTable(Query, args);
+            return dt.Rows == null || dt.Rows.Count == 0 ? default : dt.Rows[0][0].ToString().Convert<T>();
         }
 
         /// <summary>
@@ -743,14 +706,14 @@ namespace Penguin.Persistence.Database
                 throw new ArgumentNullException(nameof(ToImport));
             }
 
-            List<string> Commands = new List<string>(ToImport.Rows.Count + 1);
+            List<string> Commands = new(ToImport.Rows.Count + 1);
 
-            StringBuilder CreateTableSrc = new StringBuilder();
+            StringBuilder CreateTableSrc = new();
 
             _ = CreateTableSrc.Append($"CREATE TABLE {TableName} (");
 
-            List<string> Columns = new List<string>();
-            List<string> ColumnParameters = new List<string>();
+            List<string> Columns = new();
+            List<string> ColumnParameters = new();
 
             foreach (DataColumn dc in ToImport.Columns)
             {
@@ -772,11 +735,11 @@ namespace Penguin.Persistence.Database
             {
                 _ = CreateTableSrc.Append($"insert into [{TableName}] ({string.Join(",", Columns)}) Values (");
 
-                List<string> Values = new List<string>();
+                List<string> Values = new();
 
                 foreach (object o in dr.ItemArray)
                 {
-                    Values.Add(o is null || EmptyStringAsNull && string.IsNullOrWhiteSpace(o.ToString()) ? "null" : $"'{o.ToString().Replace("'", "''")}'");
+                    Values.Add(o is null || (EmptyStringAsNull && string.IsNullOrWhiteSpace(o.ToString())) ? "null" : $"'{o.ToString().Replace("'", "''")}'");
                 }
 
                 _ = CreateTableSrc.Append(string.Join(", ", Values));
@@ -787,23 +750,19 @@ namespace Penguin.Persistence.Database
                 _ = CreateTableSrc.Clear();
             }
 
-            using (SqlConnection connection = new SqlConnection(this.ConnectionString))
-            {
-                connection.Open();
+            using SqlConnection connection = new(ConnectionString);
+            connection.Open();
 
-                foreach (string queryString in Commands)
+            foreach (string queryString in Commands)
+            {
+                // Create the Command and Parameter objects.
+                using SqlCommand command = new(queryString, connection)
                 {
-                    // Create the Command and Parameter objects.
-                    using (SqlCommand command = new SqlCommand(queryString, connection)
-                    {
-                        CommandTimeout = this.CommandTimeout
-                    })
-                    {
-                        _ = command.ExecuteNonQuery();
-                    }
-                }
-                connection.Close();
+                    CommandTimeout = CommandTimeout
+                };
+                _ = command.ExecuteNonQuery();
             }
+            connection.Close();
         }
 
         /// <summary>
@@ -817,8 +776,8 @@ namespace Penguin.Persistence.Database
                 throw new ArgumentNullException(nameof(proc));
             }
 
-            this.DropProcedure(proc.Name);
-            this.ExecuteSingleQuery(proc.Body);
+            DropProcedure(proc.Name);
+            ExecuteSingleQuery(proc.Body);
         }
 
         /// <summary>
@@ -826,9 +785,10 @@ namespace Penguin.Persistence.Database
         /// </summary>
         /// <param name="FileName">The file name to run</param>
         /// <param name="SplitOn">The batch delimeter, defaults to "GO"</param>
+        /// <param name="encoding"></param>
         public async Task Restore(string FileName, string SplitOn = ScriptHelpers.DEFAULT_SPLIT, Encoding encoding = null)
         {
-            await Restore(FileName, this.ConnectionString, this.CommandTimeout, SplitOn, encoding ?? Encoding.Default);
+            await Restore(FileName, ConnectionString, CommandTimeout, SplitOn, encoding ?? Encoding.Default).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -838,17 +798,15 @@ namespace Penguin.Persistence.Database
         /// <returns>A count of the table rows</returns>
         public int TableCount(string TableName)
         {
-            using (DataTable dt = this.ExecuteToTable($"select count(*) from {FormatProcedure(TableName)}"))
-            {
-                return int.Parse(dt.Rows[0].ItemArray[0].ToString(), NumberStyles.Integer, CultureInfo.CurrentCulture);
-            }
+            using DataTable dt = ExecuteToTable($"select count(*) from {FormatProcedure(TableName)}");
+            return int.Parse(dt.Rows[0].ItemArray[0].ToString(), NumberStyles.Integer, CultureInfo.CurrentCulture);
         }
 
         internal static void BackupOrTransfer(string ConnectionString, Action<Server, Transfer> toRun)
         {
-            ConnectionString connection = new ConnectionString(ConnectionString);
+            ConnectionString connection = new(ConnectionString);
 
-            ServerConnection serverConnection = new ServerConnection
+            ServerConnection serverConnection = new()
             {
                 LoginSecure = false,
                 ServerInstance = connection.DataSource,
@@ -869,7 +827,7 @@ namespace Penguin.Persistence.Database
 
             serverConnection.DatabaseName = connection.Database;
 
-            Server smoServer = new Server(serverConnection);
+            Server smoServer = new(serverConnection);
 
             smoServer.ConnectionContext.LockTimeout = 0;
             smoServer.ConnectionContext.StatementTimeout = 0;
@@ -886,7 +844,7 @@ namespace Penguin.Persistence.Database
                 throw new Exception("Can't find the database '$Database' in $Datasource");
             }
 
-            Transfer transfer = new Transfer(db);
+            Transfer transfer = new(db);
 
             toRun.Invoke(smoServer, transfer);
 
@@ -926,7 +884,7 @@ namespace Penguin.Persistence.Database
                 return null;
             }
 
-            if (dbParam.DATA_TYPE == SqlDbType.DateTime || dbParam.DATA_TYPE == SqlDbType.DateTime2)
+            if (dbParam.DATA_TYPE is SqlDbType.DateTime or SqlDbType.DateTime2)
             {
                 return DateTime.Parse(ParamValue.ToString(), CultureInfo.CurrentCulture).ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.CurrentCulture);
             }
@@ -959,21 +917,19 @@ namespace Penguin.Persistence.Database
 
         private void ExecuteSingleQuery(string Text)
         {
-            using (SqlConnection connection = new SqlConnection(this.ConnectionString))
+            using SqlConnection connection = new(ConnectionString);
+            connection.Open();
+
+            // Create the Command and Parameter objects.
+            using (SqlCommand command = new(Text, connection)
             {
-                connection.Open();
-
-                // Create the Command and Parameter objects.
-                using (SqlCommand command = new SqlCommand(Text, connection)
-                {
-                    CommandTimeout = this.CommandTimeout
-                })
-                {
-                    _ = command.ExecuteNonQuery();
-                }
-
-                connection.Close();
+                CommandTimeout = CommandTimeout
+            })
+            {
+                _ = command.ExecuteNonQuery();
             }
+
+            connection.Close();
         }
     }
 }
