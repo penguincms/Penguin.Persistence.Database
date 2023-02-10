@@ -9,6 +9,7 @@
         }
 
         public int CommandTimeout { get; private set; }
+
         public string ConnectionString { get; private set; }
 
         public TransientCommand Build(string Query, params object[] args)
