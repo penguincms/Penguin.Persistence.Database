@@ -11,6 +11,7 @@ namespace Penguin.Persistence.Database.Objects
 
         private bool disposedValue;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1024:Use properties where appropriate", Justification = "<Pending>")]
         public SqlDataAdapter GetDataAdapter()
         {
             return new SqlDataAdapter(this.Command);

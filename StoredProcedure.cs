@@ -135,7 +135,7 @@ namespace Penguin.Persistence.Database
 
             int NameIndex = this.Body.AllIndexesOf(this.Name).First(i => i > this.Body.IndexOf("create procedure ", StringComparison.OrdinalIgnoreCase));
 
-            this.Body = this.Body.Substring(0, NameIndex) + parsedNewName + this.Body.Substring(NameIndex + this.Name.Length);
+            this.Body = this.Body[..NameIndex] + parsedNewName + this.Body.Substring(NameIndex + this.Name.Length);
 
             this.Name = parsedNewName;
         }
