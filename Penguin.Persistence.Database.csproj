@@ -2,7 +2,7 @@
   <Import Project="Penguin.Projects.Shared\Penguin.Projects.Shared.csproj" />
   <PropertyGroup>
     <TargetFrameworks>netstandard2.1;net7.0</TargetFrameworks>
-    <PackageProjectUrl>https://github.com/PenguinCMS/Penguin.Persistence.Database</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/PenguinCms/Penguin.Persistence.Database</PackageProjectUrl>
     <Version>5.0.5</Version>
     <Description>Light set of classes used to allow Penguins to access MSSQL databases in a slightly-higher-level than ADO but not ORM. Created as a method of bypassing ORM for fallback without needing to reinvent the wheel in ADO. Includes some nice Database access methods as well as a method for converting an IEnumerable to a DataTable using Properties as columns. Also contains a SQL-.NET Type conversion helper</Description>
     <AssemblyName>Penguin.Persistence.Database</AssemblyName>
@@ -26,7 +26,7 @@
     <EmbeddedResource Include="Scripts\TruncateDatabase.sql" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="161.46041.41" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.0" />
+    <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="170.13.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
   </ItemGroup>
 </Project>
