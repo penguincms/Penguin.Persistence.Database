@@ -15,10 +15,10 @@
     <None Remove="Generate\StoredProcedures\Tools\_GetParamDefault.sql" />
     <None Remove="Scripts\TruncateDatabase.sql" />
     <PackageReference Include="Loxifi.StringConvert" Version="0.1.0" />
-    <PackageReference Include="Penguin.Threading.BackgroundWorker" Version="5.2.0" />
-    <PackageReference Include="Penguin.Persistence.Abstractions" Version="5.2.0" />
-    <PackageReference Include="Penguin.Reflection.Extensions" Version="5.2.0" />
-    <PackageReference Include="Penguin.Debugging" Version="5.2.0" />
+    <PackageReference Include="Penguin.Threading.BackgroundWorker" Version="5.4.0" />
+    <PackageReference Include="Penguin.Persistence.Abstractions" Version="5.4.0" />
+    <PackageReference Include="Penguin.Reflection.Extensions" Version="5.4.0" />
+    <PackageReference Include="Penguin.Debugging" Version="5.4.0" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Generate\StoredProcedures\Tools\_GetAllProcedures.sql" />
