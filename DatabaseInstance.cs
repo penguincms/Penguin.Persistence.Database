@@ -1,11 +1,9 @@
 using Loxifi;
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
-using Penguin.Debugging;
 using Penguin.Persistence.Database.Extensions;
 using Penguin.Persistence.Database.Helpers;
 using Penguin.Persistence.Database.Objects;
-using Penguin.Reflection.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -182,7 +180,6 @@ namespace Penguin.Persistence.Database
         /// </summary>
         public static void TruncateDatabase(string ConnectionString)
         {
-            StaticLogger.Log("Truncating database...");
             using (SqlConnection connection = new(ConnectionString))
             {
                 connection.Open();
@@ -199,7 +196,6 @@ namespace Penguin.Persistence.Database
 
                 _ = command.ExecuteNonQuery();
             }
-            StaticLogger.Log("Truncating Complete.");
         }
 
         public static void Zip(string FileName, bool Delete = true)
@@ -524,7 +520,21 @@ namespace Penguin.Persistence.Database
 
                 foreach (ParameterInfo pi in chosenConstructor.GetParameters())
                 {
-                    parameters.Add(newObjDict[pi.Name]);
+                    object parameterValue = newObjDict[pi.Name];
+
+                    if(parameterValue is System.DBNull)
+                    {
+                        if (pi.ParameterType.IsClass)
+                        {
+                            parameterValue = null;
+                        }
+                        else
+                        {
+                            parameterValue = Activator.CreateInstance(pi.ParameterType);
+                        }
+                    }
+
+                    parameters.Add(parameterValue);
                     _ = newObjDict.Remove(pi.Name);
                 }
 

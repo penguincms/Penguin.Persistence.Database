@@ -1,5 +1,5 @@
 ﻿using Loxifi;
-using Penguin.Extensions.String;
+using Loxifi.Extensions.StringExtensions;
 using System;
 using System.Collections.Generic;
 using System.Data;

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="Penguin.Projects.Shared\Penguin.Projects.Shared.csproj" />
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net7.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;net7.0;netstandard2.0</TargetFrameworks>
     <PackageProjectUrl>https://github.com/PenguinCMS/Penguin.Persistence.Database</PackageProjectUrl>
     <Version>5.0.5</Version>
     <Description>Light set of classes used to allow Penguins to access MSSQL databases in a slightly-higher-level than ADO but not ORM. Created as a method of bypassing ORM for fallback without needing to reinvent the wheel in ADO. Includes some nice Database access methods as well as a method for converting an IEnumerable to a DataTable using Properties as columns. Also contains a SQL-.NET Type conversion helper</Description>
@@ -14,15 +14,8 @@
     <None Remove="Generate\StoredProcedures\Tools\_GetAllProcedures.sql" />
     <None Remove="Generate\StoredProcedures\Tools\_GetParamDefault.sql" />
     <None Remove="Scripts\TruncateDatabase.sql" />
-    <PackageReference Include="Loxifi.StringConvert" Version="0.1.0" />
-    <ProjectReference Include="..\Penguin.Debugging\Penguin.Debugging.Local.csproj" />
-    <ProjectReference Include="..\Penguin.Entities.Abstractions\Penguin.Entities.Abstractions.Local.csproj" />
-    <ProjectReference Include="..\Penguin.Extensions.Exceptions\Penguin.Extensions.Exceptions.Local.csproj" />
-    <ProjectReference Include="..\Penguin.Extensions.String\Penguin.Extensions.String.Local.csproj" />
-    <ProjectReference Include="..\Penguin.Persistence.Abstractions\Penguin.Persistence.Abstractions.Local.csproj" />
-    <ProjectReference Include="..\Penguin.Reflection.Abstractions\Penguin.Reflection.Abstractions.Local.csproj" />
-    <ProjectReference Include="..\Penguin.Reflection.Extensions\Penguin.Reflection.Extensions.Local.csproj" />
-    <ProjectReference Include="..\Penguin.Threading.BackgroundWorker\Penguin.Threading.BackgroundWorker.Local.csproj" />
+    <PackageReference Include="Loxifi.Extensions.StringExtensions" Version="0.2.0" />
+    <PackageReference Include="Loxifi.StringConvert" Version="0.2.0" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Generate\StoredProcedures\Tools\_GetAllProcedures.sql" />
@@ -30,6 +23,7 @@
     <EmbeddedResource Include="Scripts\TruncateDatabase.sql" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Loxifi.StringParsing" Version="0.2.1" />
     <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="170.13.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
   </ItemGroup>

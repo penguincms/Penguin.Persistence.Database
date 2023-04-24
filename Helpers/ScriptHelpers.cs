@@ -1,7 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
-using Penguin.Debugging;
 using Penguin.Persistence.Database.Objects;
 using System;
 using System.Collections.Concurrent;
@@ -10,8 +9,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using BackgroundWorker = Penguin.Threading.BackgroundWorker.BackgroundWorker;
 
 namespace Penguin.Persistence.Database.Helpers
 {
@@ -93,8 +92,10 @@ namespace Penguin.Persistence.Database.Helpers
             }
         }
 
-        internal static async Task RunSplitScript(Stream stream, string ConnectionString, int TimeOut = 0, string SplitOn = DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = 4096)
+        internal static void RunSplitScript(Stream stream, string ConnectionString, int TimeOut = 0, string SplitOn = DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = 4096)
         {
+            //TODO: Use a blocking collection here instead
+
             DateTime start = DateTime.Now;
 
             Exception toThrow = null;
@@ -104,9 +105,13 @@ namespace Penguin.Persistence.Database.Helpers
             encoding ??= Encoding.Default;
 
             ConcurrentQueue<AsyncSqlCommand> Commands = new();
+
             bool ReadComplete = false;
 
-            BackgroundWorker SQLWorker = BackgroundWorker.Create((worker) =>
+            ManualResetEvent sqlThreadGate = new ManualResetEvent(false);
+            ManualResetEvent fileReadThreadGate = new ManualResetEvent(false);
+
+            Thread sqlThread = new Thread(() =>
             {
                 using SqlConnection connection = new(ConnectionString);
                 Server server = new(new ServerConnection(connection));
@@ -121,8 +126,6 @@ namespace Penguin.Persistence.Database.Helpers
                         {
                             try
                             {
-                                StaticLogger.Log($"Executing Command {cmd.CommandNumber} - {Math.Round(cmd.Progress, 2)}%");
-
                                 _ = server.ConnectionContext.ExecuteNonQuery(cmd.Text);
                             }
                             catch (Exception ex)
@@ -137,7 +140,6 @@ namespace Penguin.Persistence.Database.Helpers
 
                                 if (!AcceptableErrors.Any(ae => ex.Message.Contains(ae)) && (ex.InnerException == null || !AcceptableErrors.Any(ae => ex.InnerException.Message.Contains(ae))))
                                 {
-                                    StaticLogger.Log(cmd.Text + Environment.NewLine + ex.Message);
                                     toThrow = ex;
                                     throw;
                                 }
@@ -149,9 +151,11 @@ namespace Penguin.Persistence.Database.Helpers
                         System.Threading.Thread.Sleep(10);
                     }
                 }
+
+                fileReadThreadGate.Set();
             });
 
-            BackgroundWorker FileReadWorker = BackgroundWorker.Create((worker) =>
+            Thread fileReadThread = new Thread(() =>
             {
                 using StreamReader reader = new(stream, encoding, detectEncodingFromByteOrderMarks, bufferSize, false);
                 long streamLength = 0;
@@ -216,7 +220,7 @@ namespace Penguin.Persistence.Database.Helpers
 
                         while (Commands.Count > 5)
                         {
-                            if (SQLWorker.IsBusy)
+                            if (sqlThread.IsAlive)
                             {
                                 System.Threading.Thread.Sleep(100);
                             }
@@ -279,13 +283,14 @@ namespace Penguin.Persistence.Database.Helpers
                 Commands.Enqueue(lcmd);
 
                 ReadComplete = true;
+                sqlThreadGate.Set();
             });
 
-            Task<bool> FileReadResult = FileReadWorker.RunWorkerAsync();
-            Task<bool> SqlProcessResult = SQLWorker.RunWorkerAsync();
+            fileReadThread.Start();
+            sqlThread.Start();
 
-            _ = await FileReadResult;
-            _ = await SqlProcessResult;
+            fileReadThreadGate.WaitOne();
+            sqlThreadGate.WaitOne();
         }
 
         internal static async Task RunSplitScript(string FilePath, string ConnectionString, int TimeOut = 0, string SplitOn = DEFAULT_SPLIT, Encoding encoding = null, bool detectEncodingFromByteOrderMarks = true, int bufferSize = 4096)
@@ -303,7 +308,8 @@ namespace Penguin.Persistence.Database.Helpers
             Stream s = Path.GetExtension(FilePath).Trim('.').Equals("zql", StringComparison.OrdinalIgnoreCase)
                 ? GetDecompressStream(FilePath)
                 : File.OpenRead(FilePath);
-            await RunSplitScript(s, ConnectionString, TimeOut, SplitOn, encoding, detectEncodingFromByteOrderMarks, bufferSize);
+
+            await Task.Run(() => RunSplitScript(s, ConnectionString, TimeOut, SplitOn, encoding, detectEncodingFromByteOrderMarks, bufferSize));
 
             s?.Dispose();
         }

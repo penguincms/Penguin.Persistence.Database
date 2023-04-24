@@ -1,6 +1,5 @@
 ﻿using Loxifi;
-using Penguin.Persistence.Abstractions.Attributes.Rendering;
-using Penguin.Reflection.Extensions;
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -72,66 +71,68 @@ namespace Penguin.Persistence.Database.Extensions
         /// <param name="objList">The IEnumerable of objects to use as a data source</param>
         /// <param name="ShowAllFields">if true, no logic is attempted to filter the results using display attributes</param>
         /// <returns>A data table containing the object values</returns>
+        [Obsolete("This method needs to be moved to a data table specific package")]
         public static DataTable ToDataTable(this IEnumerable<object> objList, bool ShowAllFields = false)
         {
-            if (objList is null)
-            {
-                throw new ArgumentNullException(nameof(objList));
-            }
+            throw new NotImplementedException();
+            //if (objList is null)
+            //{
+            //    throw new ArgumentNullException(nameof(objList));
+            //}
 
-            DataTable thisTable = new();
+            //DataTable thisTable = new();
 
-            Type objectType = objList.GetType().GenericTypeArguments[0];
+            //Type objectType = objList.GetType().GenericTypeArguments[0];
 
-            List<PropertyInfo> Properties = new();
+            //List<PropertyInfo> Properties = new();
 
-            Dictionary<PropertyInfo, int> PropertyOrder = new();
+            //Dictionary<PropertyInfo, int> PropertyOrder = new();
 
-            foreach (PropertyInfo thisProp in objectType.GetProperties().Reverse())
-            {
-                DisplayAttribute displayAttribute = thisProp.GetCustomAttribute<DisplayAttribute>();
+            //foreach (PropertyInfo thisProp in objectType.GetProperties().Reverse())
+            //{
+            //    DisplayAttribute displayAttribute = thisProp.GetCustomAttribute<DisplayAttribute>();
 
-                bool display = true;
+            //    bool display = true;
 
-                if (displayAttribute != null)
-                {
-                    display = display && displayAttribute.AutoGenerateField;
-                }
+            //    if (displayAttribute != null)
+            //    {
+            //        display = display && displayAttribute.AutoGenerateField;
+            //    }
 
-                display = display || ShowAllFields;
+            //    display = display || ShowAllFields;
 
-                if (display)
-                {
-                    int index = 0;
+            //    if (display)
+            //    {
+            //        int index = 0;
 
-                    while (index < Properties.Count && PropertyOrder[Properties.ElementAt(index)] > index)
-                    {
-                        index++;
-                    }
-                    Properties.Insert(index, thisProp);
-                    PropertyOrder.Add(thisProp, index);
-                }
-            }
+            //        while (index < Properties.Count && PropertyOrder[Properties.ElementAt(index)] > index)
+            //        {
+            //            index++;
+            //        }
+            //        Properties.Insert(index, thisProp);
+            //        PropertyOrder.Add(thisProp, index);
+            //    }
+            //}
 
-            foreach (PropertyInfo thisProperty in Properties)
-            {
-                DisplayNameAttribute displayNameAttribute = thisProperty.GetCustomAttribute<DisplayNameAttribute>();
-                string DisplayName = displayNameAttribute != null ? displayNameAttribute.DisplayName : thisProperty.Name;
-                _ = thisTable.Columns.Add(DisplayName);
-            }
+            //foreach (PropertyInfo thisProperty in Properties)
+            //{
+            //    DisplayNameAttribute displayNameAttribute = thisProperty.GetCustomAttribute<DisplayNameAttribute>();
+            //    string DisplayName = displayNameAttribute != null ? displayNameAttribute.DisplayName : thisProperty.Name;
+            //    _ = thisTable.Columns.Add(DisplayName);
+            //}
 
-            foreach (object thisObj in objList)
-            {
-                DataRow thisRow = thisTable.NewRow();
-                int i = 0;
-                foreach (PropertyInfo thisProperty in Properties)
-                {
-                    thisRow[i++] = thisProperty.GetValue(thisObj);
-                }
+            //foreach (object thisObj in objList)
+            //{
+            //    DataRow thisRow = thisTable.NewRow();
+            //    int i = 0;
+            //    foreach (PropertyInfo thisProperty in Properties)
+            //    {
+            //        thisRow[i++] = thisProperty.GetValue(thisObj);
+            //    }
 
-                thisTable.Rows.Add(thisRow);
-            }
-            return thisTable;
+            //    thisTable.Rows.Add(thisRow);
+            //}
+            //return thisTable;
         }
 
         /// <summary>
