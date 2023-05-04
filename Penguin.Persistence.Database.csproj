@@ -15,7 +15,7 @@
     <None Remove="Generate\StoredProcedures\Tools\_GetParamDefault.sql" />
     <None Remove="Scripts\TruncateDatabase.sql" />
     <PackageReference Include="Loxifi.Extensions.StringExtensions" Version="0.2.0" />
-    <PackageReference Include="Loxifi.StringConvert" Version="0.2.0" />
+    <PackageReference Include="Loxifi.StringConvert" Version="0.8.0" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Generate\StoredProcedures\Tools\_GetAllProcedures.sql" />
